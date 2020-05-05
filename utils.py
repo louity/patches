@@ -48,6 +48,46 @@ def correct_topk(output, target, topk=(1,)):
     return res
 
 
+def compute_whitening_from_loader(loader, patch_size, seed=0, reg=1e-4):
+    mean, covariance = None, None
+
+    # compute the mean
+    N = 0
+    torch.manual_seed(seed)
+    for batch_idx, (inputs, _) in enumerate(loader):
+        inputs, _ = inputs.to(device), _.to(device)
+        patches = F.unfold(inputs, patch_size).transpose(0, 1).contiguous()
+        patches = patches.view(patches.size(0), -1)
+        n = inputs.size(0)
+        batch_mean = patches.mean(dim=1, keepdims=True).double()
+        if mean is None:
+            mean = batch_mean
+        else:
+            mean = N/(N+n)*mean + n/(N+n)*batch_mean
+        N += n
+
+    # compute the covariance
+    N = 0
+    torch.manual_seed(seed)
+    for batch_idx, (inputs, _) in enumerate(loader):
+        inputs, _ = inputs.to(device), _.to(device)
+        patches = F.unfold(inputs, patch_size).transpose(0, 1).contiguous()
+        patches = patches.view(patches.size(0), -1).double() - mean
+        n = inputs.size(0)
+        batch_covariance = (patches @ patches.t() / patches.size(1))
+        if covariance is None:
+            covariance = batch_covariance
+        else:
+            covariance = N/(N+n)*covariance + n/(N+n)*batch_covariance
+        N += n
+
+    (eigvals, eigvecs) = scipy.linalg.eigh(covariance.cpu().numpy())
+    inv_sqrt_eigvals = np.diag(np.power(eigvals + reg, -1/2))
+    whitening_operator = eigvecs.dot(inv_sqrt_eigvals)
+
+    return (mean.view(-1).cpu().numpy().astype('float32'),
+            whitening_operator.astype('float32'))
+
 def compute_whitening(patches, reg=0.001):
     if (patches.dtype == 'uint8'):
         patches = patches.astype('float64')
@@ -73,18 +113,14 @@ def compute_whitening(patches, reg=0.001):
 
     whitening_operator = eigvecs.dot(inv_sqrt_eigvals)
 
-    patches_whitened = (patches).dot(whitening_operator)
-
-
-    return (patches_whitened.reshape(orig_shape).astype('float32'),
-            whitening_operator.astype('float32'),
-            patches_mean.reshape(-1).astype('float32'))
+    return (patches_mean.reshape(-1).astype('float32'),
+            whitening_operator.astype('float32'))
 
 
 def heaviside(x, bias):
     if x.dtype == torch.float16:
-        return (x > bias).half() - (x < -bias).half()
-    return (x > bias).float() - (x < -bias).float()
+        return (x > bias).half()
+    return (x > bias).float()
 
 
 def topk(x, k):

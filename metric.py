@@ -16,7 +16,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 
 from imagenet import Imagenet32
-from utils import compute_whitening, correct_topk, select_patches_randomly, heaviside, topk, topk_heaviside, compute_classifier_outputs, create_classifier_blocks, compute_channel_mean_and_std
+from utils import compute_whitening, compute_whitening_from_loader, correct_topk, select_patches_randomly, heaviside, topk, topk_heaviside, compute_classifier_outputs, create_classifier_blocks, compute_channel_mean_and_std
 
 print('metric.py')
 parser = argparse.ArgumentParser('classification on cifar10 based on patches neighborhood indicators for euclidian metric')
@@ -113,6 +113,8 @@ if args.dataset == 'cifar10':
     trainset = CIFAR10(root='./data', train=True, download=True, transform=transform_train)
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.batchsize, shuffle=True, num_workers=args.num_workers)
     n_classes=10
+
+
     testset = CIFAR10(root='./data', train=False, download=True, transform=transform_test)
     testloader = torch.utils.data.DataLoader(testset, batch_size=args.batchsize, shuffle=False, num_workers=args.num_workers)
 elif args.dataset in ['imagenet32', 'imagenet64', 'imagenet128']:
@@ -186,13 +188,11 @@ class Net(nn.Module):
         out = out.half()
         out = F.conv2d(out, conv_weight)
 
-        out = self.shrink(out, self.bias)
-
-        out1 = F.relu(-out, inplace=False) # minus patches
+        out1 = self.shrink(-out, self.bias)
         out1 = F.avg_pool2d(out1, [self.pool_size, self.pool_size], stride=[self.pool_stride, self.pool_stride],
                             ceil_mode=True)
-        out = F.relu(out, inplace=True) # plus patches
-        out2 = F.avg_pool2d(out, [self.pool_size, self.pool_size], stride=[self.pool_stride, self.pool_stride],
+        out2 = self.shrink(out, self.bias)
+        out2 = F.avg_pool2d(out2, [self.pool_size, self.pool_size], stride=[self.pool_stride, self.pool_stride],
                             ceil_mode=True)
         return out1.float(), out2.float()
 
@@ -212,13 +212,25 @@ print(f'Trainset : {t.shape}')
 patches = select_patches_randomly(t, seed=args.numpy_seed, patch_size=spatialsize_convolution)
 print(f'patches extracted : {patches.shape}')
 
-whitened_patches, whitening_op, patches_mean = compute_whitening(patches, reg=args.whitening_reg)
-print(f'patches whitened : {whitened_patches.shape}')
+# # old version, whitening computed on a subset
+# patches_mean, whitening_op  = compute_whitening(patches, reg=args.whitening_reg)
+
+# new version, whitening computed on all the patches of the dataset
+trainset_whitening = CIFAR10(root='./data', train=True, download=True, transform=transforms.ToTensor())
+trainloader_whitening = torch.utils.data.DataLoader(trainset_whitening, batch_size=1000, shuffle=False, num_workers=args.num_workers)
+patches_mean, whitening_op  = compute_whitening_from_loader(trainloader_whitening, patch_size=spatialsize_convolution, reg=args.whitening_reg)
+del trainloader_whitening
+del trainset_whitening
+
+patches = patches.astype('float64')
+patches /= 255.0
+orig_shape = patches.shape
+patches = patches.reshape(patches.shape[0], -1) - patches_mean.reshape(1, -1)
+whitened_patches = (patches).dot(whitening_op).astype('float32')
 
 normalized_whitened_patches = (
-        whitened_patches.reshape(patches.shape[0], -1) /
-        np.linalg.norm(whitened_patches.reshape(patches.shape[0], -1), axis=1, keepdims=True)
-    ).reshape(patches.shape)
+        whitened_patches / np.linalg.norm(whitened_patches, axis=1, keepdims=True)
+    ).reshape(orig_shape)
 print(f'patches normalized whitened : {normalized_whitened_patches.shape}')
 
 idxs = np.random.choice(normalized_whitened_patches.shape[0], n_channel_convolution, replace=False)
