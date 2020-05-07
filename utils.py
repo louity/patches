@@ -20,7 +20,11 @@ def select_patches_randomly(images, patch_size, n_patches=5000000, seed=0):
     n_patches_per_col = images.shape[3] - patch_size + 1
     n_patches_per_image = n_patches_per_row * n_patches_per_col
     n_patches_total = images.shape[0] * n_patches_per_image
-    patch_ids = np.random.choice(n_patches_total, size=n_patches, replace=False)
+    patch_ids = np.random.choice(n_patches_total, size=n_patches, replace=True)
+    unique_patch_ids = np.unique(patch_ids)
+    while len(unique_patch_ids) < len(patch_ids):
+        unique_patch_ids = np.unique(np.concatenate([unique_patch_ids, np.random.choice(n_patches_total, size=n_patches, replace=True)]))
+    patch_ids = unique_patch_ids[:len(patch_ids)]
 
     patches = np.zeros((n_patches, 3, patch_size, patch_size), dtype=images.dtype)
 

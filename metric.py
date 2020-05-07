@@ -131,8 +131,7 @@ elif args.dataset in ['imagenet32', 'imagenet64', 'imagenet128']:
     if args.dataset=='imagenet128':
         spatial_size = 128
         padding = 16
-        # NOTE
-        n_arrays_train = 99
+        n_arrays_train = 100
     n_classes = 1000
 
     if args.no_padding:
@@ -198,29 +197,36 @@ class Net(nn.Module):
 
 
 
-t = None
-if hasattr(trainset, 'train_data'):
-    t = trainset.train_data
-    print('train_data')
-elif hasattr(trainset, 'data'):
-    t = trainset.data
-    print('data')
-else:
-    raise RuntimeError
-print(f'Trainset : {t.shape}')
-
-patches = select_patches_randomly(t, seed=args.numpy_seed, patch_size=spatialsize_convolution)
-print(f'patches extracted : {patches.shape}')
 
 # # old version, whitening computed on a subset
 # patches_mean, whitening_op  = compute_whitening(patches, reg=args.whitening_reg)
 
 # new version, whitening computed on all the patches of the dataset
-trainset_whitening = CIFAR10(root='./data', train=True, download=True, transform=transforms.ToTensor())
-trainloader_whitening = torch.utils.data.DataLoader(trainset_whitening, batch_size=1000, shuffle=False, num_workers=args.num_workers)
-patches_mean, whitening_op  = compute_whitening_from_loader(trainloader_whitening, patch_size=spatialsize_convolution, reg=args.whitening_reg)
-del trainloader_whitening
-del trainset_whitening
+whitening_file = f'data/whitening_{args.dataset}_patchsize{spatialsize_convolution}_reg{args.whitening_reg}.npz'
+
+if not os.path.exists(whitening_file):
+    if args.dataset == 'cifar10':
+        trainset_whitening = CIFAR10(root='./data', train=True, download=True, transform=transforms.ToTensor())
+        trainloader_whitening = torch.utils.data.DataLoader(trainset_whitening, batch_size=1000, shuffle=False, num_workers=args.num_workers)
+    elif args.dataset in ['imagenet32', 'imagenet64', 'imagenet128']:
+        trainset_whitening = Imagenet32(args.path_train, transform=transforms.ToTensor(), sz=spatial_size, n_arrays=n_arrays_train)
+        trainloader_whitening = torch.utils.data.DataLoader(
+            trainset_whitening, batch_size=500, shuffle=False,
+            num_workers=args.num_workers, pin_memory=True)
+    patches_mean, whitening_op  = compute_whitening_from_loader(trainloader, patch_size=spatialsize_convolution, reg=args.whitening_reg)
+    del trainloader_whitening
+    del trainset_whitening
+    np.savez(whitening_file, patches_mean=patches_mean, whitening_op=whitening_op)
+    print(f'Whitening computed and saved in file {whitening_file}')
+whitening = np.load(whitening_file)
+whitening_op = whitening['whitening_op']
+patches_mean = whitening['patches_mean']
+
+t = trainset.data
+print(f'Trainset : {t.shape}')
+
+patches = select_patches_randomly(t, patch_size=spatialsize_convolution, n_patches=n_channel_convolution, seed=args.numpy_seed)
+print(f'patches randomly selected: {patches.shape}')
 
 patches = patches.astype('float64')
 patches /= 255.0
@@ -233,14 +239,10 @@ normalized_whitened_patches = (
     ).reshape(orig_shape)
 print(f'patches normalized whitened : {normalized_whitened_patches.shape}')
 
-idxs = np.random.choice(normalized_whitened_patches.shape[0], n_channel_convolution, replace=False)
-selected_patches = normalized_whitened_patches[idxs].astype(np.float32)
-print(f'patches randomly selected: {selected_patches.shape}')
-
 minus_whitened_patches_mean = -torch.from_numpy(patches_mean.dot(whitening_op))
 whitening_operator = torch.from_numpy(whitening_op.T).view(whitening_op.shape[0], whitening_op.shape[1], 1, 1)
 
-kernel_convolution = torch.from_numpy(selected_patches).view(n_channel_convolution, -1, 1, 1)
+kernel_convolution = torch.from_numpy(normalized_whitened_patches).view(n_channel_convolution, -1, 1, 1)
 
 params = []
 
@@ -299,8 +301,17 @@ if args.multigpu and n_gpus > 1:
     net = nn.DataParallel(net)
 
 if args.normalize_net_outputs:
-    mean1, mean2, std1, std2 = compute_channel_mean_and_std(trainloader, net, n_channel_convolution,
+    mean_std_file = f'data/mean_std_{args.dataset}_seed{args.numpy_seed}_patchsize{spatialsize_convolution}_reg{args.whitening_reg}.npz'
+    if not os.path.exists(mean_std_file):
+        mean1, mean2, std1, std2 = compute_channel_mean_and_std(trainloader, net, n_channel_convolution,
             kernel_convolution, whitening_operator, minus_whitened_patches_mean, n_epochs=1, seed=0)
+        np.savez(mean_std_file, mean1=mean1.cpu().numpy(), mean2=mean2.cpu().numpy(), std1=std1.cpu().numpy(), std2=std2.cpu().numpy())
+        print(f'Net outputs mean and std computed and saved in file {mean_std_file}')
+    mean_std = np.load(mean_std_file)
+    mean1 = torch.from_numpy(mean_std['mean1']).to(device)
+    mean2 = torch.from_numpy(mean_std['mean2']).to(device)
+    std1 = torch.from_numpy(mean_std['std1']).to(device)
+    std2 = torch.from_numpy(mean_std['std2']).to(device)
 
 
 def train(epoch):
