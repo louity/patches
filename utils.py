@@ -135,10 +135,9 @@ def topk(x, k):
 
 
 def topk_heaviside(x, k):
-    x_abs = torch.abs(x)
     if x.dtype == torch.float16:
-        return (x_abs >= x_abs.topk(dim=1, k=k).values.min(dim=1, keepdim=True).values).half() * x.sign().half()
-    return (x_abs >= x_abs.topk(dim=1, k=k).values.min(dim=1, keepdim=True).values).float() * x.sign().float()
+        return (x > x.topk(dim=1, k=(k+1)).values.min(dim=1, keepdim=True).values).half()
+    return (x > x.topk(dim=1, k=(k+1)).values.min(dim=1, keepdim=True).values).float()
 
 
 def compute_classifier_outputs(outputs1, outputs2, targets, args, batch_norm1, batch_norm2, classifier1, classifier2, classifier, train=True):
