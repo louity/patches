@@ -301,7 +301,7 @@ if args.multigpu and n_gpus > 1:
     net = nn.DataParallel(net)
 
 if args.normalize_net_outputs:
-    mean_std_file = f'data/mean_std_{args.dataset}_seed{args.numpy_seed}_patchsize{spatialsize_convolution}_reg{args.whitening_reg}.npz'
+    mean_std_file = f'data/mean_std_{args.dataset}_seed{args.numpy_seed}_patchsize{spatialsize_convolution}_npatches{args.n_channel_convolution}_reg{args.whitening_reg}.npz'
     if not os.path.exists(mean_std_file):
         mean1, mean2, std1, std2 = compute_channel_mean_and_std(trainloader, net, n_channel_convolution,
             kernel_convolution, whitening_operator, minus_whitened_patches_mean, n_epochs=1, seed=0)
