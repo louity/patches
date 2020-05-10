@@ -52,7 +52,7 @@ def correct_topk(output, target, topk=(1,)):
     return res
 
 
-def compute_whitening_from_loader(loader, patch_size, seed=0):
+def compute_whitening_from_loader(loader, patch_size, seed=0, stride=1):
     mean, covariance = None, None
 
     # compute the mean
@@ -60,7 +60,7 @@ def compute_whitening_from_loader(loader, patch_size, seed=0):
     torch.manual_seed(seed)
     for batch_idx, (inputs, _) in enumerate(loader):
         inputs, _ = inputs.to(device), _.to(device)
-        patches = F.unfold(inputs, patch_size).transpose(0, 1).contiguous()
+        patches = F.unfold(inputs, patch_size, stride=stride).transpose(0, 1).contiguous()
         patches = patches.view(patches.size(0), -1)
         n = inputs.size(0)
         batch_mean = patches.mean(dim=1, keepdims=True).double()
@@ -70,19 +70,20 @@ def compute_whitening_from_loader(loader, patch_size, seed=0):
             mean = N/(N+n)*mean + n/(N+n)*batch_mean
         N += n
 
+    mean = mean.float()
     # compute the covariance
     N = 0
     torch.manual_seed(seed)
     for batch_idx, (inputs, _) in enumerate(loader):
         inputs, _ = inputs.to(device), _.to(device)
-        patches = F.unfold(inputs, patch_size).transpose(0, 1).contiguous()
-        patches = patches.view(patches.size(0), -1).double() - mean
+        patches = F.unfold(inputs, patch_size, stride=stride).transpose(0, 1).contiguous()
+        patches = patches.view(patches.size(0), -1) - mean
         n = inputs.size(0)
         batch_covariance = (patches @ patches.t() / patches.size(1))
         if covariance is None:
-            covariance = batch_covariance
+            covariance = batch_covariance.double()
         else:
-            covariance = N/(N+n)*covariance + n/(N+n)*batch_covariance
+            covariance = N/(N+n)*covariance + n/(N+n)*batch_covariance.double()
         N += n
 
     (eigvals, eigvecs) = scipy.linalg.eigh(covariance.cpu().numpy())
