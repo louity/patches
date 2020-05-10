@@ -52,7 +52,7 @@ def correct_topk(output, target, topk=(1,)):
     return res
 
 
-def compute_whitening_from_loader(loader, patch_size, seed=0, reg=1e-4):
+def compute_whitening_from_loader(loader, patch_size, seed=0):
     mean, covariance = None, None
 
     # compute the mean
@@ -86,11 +86,10 @@ def compute_whitening_from_loader(loader, patch_size, seed=0, reg=1e-4):
         N += n
 
     (eigvals, eigvecs) = scipy.linalg.eigh(covariance.cpu().numpy())
-    inv_sqrt_eigvals = np.diag(np.power(eigvals + reg, -1/2))
-    whitening_operator = eigvecs.dot(inv_sqrt_eigvals)
 
-    return (mean.view(-1).cpu().numpy().astype('float32'),
-            whitening_operator.astype('float32'))
+    mean = mean.view(-1).cpu().numpy().astype('float32')
+
+    return (mean, eigvecs, eigvals)
 
 def compute_whitening(patches, reg=0.001):
     if (patches.dtype == 'uint8'):
@@ -136,7 +135,9 @@ def topk(x, k):
 
 def topk_heaviside(x, k):
     if x.dtype == torch.float16:
-        return (x > x.topk(dim=1, k=(k+1)).values.min(dim=1, keepdim=True).values).half()
+        # return (x > x.topk(dim=1, k=(k+1)).values.min(dim=1, keepdim=True).values).half()
+        # return (x > x.topk(dim=1, k=(k+1)).values[:,-1:,:,:]).half()
+        return (x > x.kthvalue(dim=1, k=k-1, keepdim=True).values).half()
     return (x > x.topk(dim=1, k=(k+1)).values.min(dim=1, keepdim=True).values).float()
 
 

@@ -169,10 +169,10 @@ class Net(nn.Module):
         if shrink == 'heaviside':
             self.shrink = heaviside
         elif shrink == 'topk':
-            self.bias = int(args.topk_fraction * n_channel_convolution)
+            # self.bias = int((1 - args.topk_fraction) * n_channel_convolution)
             self.shrink = topk
         elif shrink == 'topk_heaviside':
-            self.bias = int(args.topk_fraction * n_channel_convolution)
+            self.bias = int((1 - args.topk_fraction) * n_channel_convolution)
             self.shrink = topk_heaviside
         elif shrink == 'hardshrink':
             self.shrink = F.hardshrink
@@ -196,13 +196,11 @@ class Net(nn.Module):
         return out1.float(), out2.float()
 
 
-
-
 # # old version, whitening computed on a subset
 # patches_mean, whitening_op  = compute_whitening(patches, reg=args.whitening_reg)
 
 # new version, whitening computed on all the patches of the dataset
-whitening_file = f'data/whitening_{args.dataset}_patchsize{spatialsize_convolution}_reg{args.whitening_reg}.npz'
+whitening_file = f'data/whitening_{args.dataset}_patchsize{spatialsize_convolution}.npz'
 
 if not os.path.exists(whitening_file):
     if args.dataset == 'cifar10':
@@ -213,14 +211,21 @@ if not os.path.exists(whitening_file):
         trainloader_whitening = torch.utils.data.DataLoader(
             trainset_whitening, batch_size=500, shuffle=False,
             num_workers=args.num_workers, pin_memory=True)
-    patches_mean, whitening_op  = compute_whitening_from_loader(trainloader, patch_size=spatialsize_convolution, reg=args.whitening_reg)
+    patches_mean, whitening_eigvecs, whitening_eigvals  = compute_whitening_from_loader(trainloader_whitening, patch_size=spatialsize_convolution)
     del trainloader_whitening
     del trainset_whitening
-    np.savez(whitening_file, patches_mean=patches_mean, whitening_op=whitening_op)
+    np.savez(whitening_file, patches_mean=patches_mean,
+             whitening_eigvecs=whitening_eigvecs,
+             whitening_eigvals=whitening_eigvals)
     print(f'Whitening computed and saved in file {whitening_file}')
+
 whitening = np.load(whitening_file)
-whitening_op = whitening['whitening_op']
+whitening_eigvecs = whitening['whitening_eigvecs']
+whitening_eigvals = whitening['whitening_eigvals']
 patches_mean = whitening['patches_mean']
+
+inv_sqrt_eigvals = np.diag(np.power(whitening_eigvals + args.whitening_reg, -1/2))
+whitening_op = whitening_eigvecs.dot(inv_sqrt_eigvals).astype('float32')
 
 t = trainset.data
 print(f'Trainset : {t.shape}')
@@ -301,7 +306,7 @@ if args.multigpu and n_gpus > 1:
     net = nn.DataParallel(net)
 
 if args.normalize_net_outputs:
-    mean_std_file = f'data/mean_std_{args.dataset}_seed{args.numpy_seed}_patchsize{spatialsize_convolution}_npatches{args.n_channel_convolution}_reg{args.whitening_reg}.npz'
+    mean_std_file = f'data/mean_std_{args.dataset}_seed{args.numpy_seed}_patchsize{spatialsize_convolution}_npatches{args.n_channel_convolution}_reg{args.whitening_reg}_shrink{args.shrink}.npz'
     if not os.path.exists(mean_std_file):
         mean1, mean2, std1, std2 = compute_channel_mean_and_std(trainloader, net, n_channel_convolution,
             kernel_convolution, whitening_operator, minus_whitened_patches_mean, n_epochs=1, seed=0)
