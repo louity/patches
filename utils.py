@@ -142,7 +142,7 @@ def topk_heaviside(x, k):
     return (x > x.topk(dim=1, k=(k+1)).values.min(dim=1, keepdim=True).values).float()
 
 
-def compute_classifier_outputs(outputs1, outputs2, targets, args, batch_norm1, batch_norm2, classifier1, classifier2, classifier, train=True):
+def compute_classifier_outputs(outputs1, outputs2, targets, args, batch_norm1, batch_norm2, classifier1, classifier2, classifier, train=True, relu_after_bottleneck=False):
     if args.batch_norm:
         outputs1, outputs2 = batch_norm1(outputs1), batch_norm2(outputs2)
 
@@ -156,11 +156,19 @@ def compute_classifier_outputs(outputs1, outputs2, targets, args, batch_norm1, b
 
     if args.convolutional_classifier > 0:
         if args.bottleneck_dim > 0:
+            if args.relu_after_bottleneck:
+                outputs = F.relu(outputs)
+                if args.dropout > 0:
+                    outputs = F.dropout(outputs, p=args.dropout)
             outputs = classifier(outputs)
             outputs = F.adaptive_avg_pool2d(outputs, 1)
         else:
             outputs = F.adaptive_avg_pool2d(outputs, 1)
     elif args.bottleneck_dim > 0:
+        if args.relu_after_bottleneck:
+            outputs = F.relu(outputs)
+            if args.dropout > 0:
+                outputs = F.dropout(outputs, p=args.dropout)
         outputs = classifier(outputs)
 
     outputs = outputs.view(outputs.size(0),-1)
@@ -181,8 +189,8 @@ def create_classifier_blocks(out1, out2, args, params, n_classes):
         if args.bottleneck_dim > 0:
             classifier = nn.Conv2d(args.bottleneck_dim, n_classes, args.convolutional_classifier).to(device).float()
             params += list(classifier.parameters())
-            classifier1 = nn.Conv2d(out1.size(1), args.bottleneck_dim, 1).to(device).float()
-            classifier2 = nn.Conv2d(out2.size(1), args.bottleneck_dim, 1).to(device).float()
+            classifier1 = nn.Conv2d(out1.size(1), args.bottleneck_dim, args.bottleneck_spatialsize).to(device).float()
+            classifier2 = nn.Conv2d(out2.size(1), args.bottleneck_dim, args.bottleneck_spatialsize).to(device).float()
         else:
             classifier1 = nn.Conv2d(out1.size(1), n_classes, args.convolutional_classifier).to(device).float()
             classifier2 = nn.Conv2d(out2.size(1), n_classes, args.convolutional_classifier).to(device).float()
