@@ -43,6 +43,10 @@ parser.add_argument('--no_affine_batch_norm', action='store_true', help='affine=
 parser.add_argument('--normalize_net_outputs', action='store_true', help='precompute the mean and std of the outputs to normalize them (alternative to batch norm)')
 parser.add_argument('--bottleneck_dim', default=0, type=int, help='bottleneck dimension for the classifier')
 parser.add_argument('--convolutional_classifier', type=int, default=0, help='size of the convolution for convolutional classifier')
+parser.add_argument('--bottleneck_spatialsize', type=int, default=1, help='spatial size of the bottleneck')
+parser.add_argument('--relu_after_bottleneck', action='store_true', help='add relu after bottleneck ')
+parser.add_argument('--dropout', type=float, default=0., help='dropout after relu')
+parser.add_argument('--feat_square', action='store_true', help='add square features')
 
 # parameters of the optimizer
 parser.add_argument('--batchsize', type=int, default=512)

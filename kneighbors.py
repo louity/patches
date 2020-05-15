@@ -48,6 +48,7 @@ parser.add_argument('--convolutional_classifier', type=int, default=0, help='siz
 parser.add_argument('--bottleneck_spatialsize', type=int, default=1, help='spatial size of the bottleneck')
 parser.add_argument('--relu_after_bottleneck', action='store_true', help='add relu after bottleneck ')
 parser.add_argument('--dropout', type=float, default=0., help='dropout after relu')
+parser.add_argument('--feat_square', action='store_true', help='add square features')
 
 
 # parameters of the optimizer
@@ -332,6 +333,9 @@ x = torch.rand(1, 3, spatial_size, spatial_size).half().to(device)
 
 
 out1, out2 = net(x, kernel_convolution, bias_convolution)
+if args.feat_square:
+    out1 = torch.cat([out1, out1**2], dim=1)
+    out2 = torch.cat([out2, out1**2], dim=1)
 print(f'Net output size: out1 {out1.shape[-3:]} out2 {out2.shape[-3:]}')
 
 classifier_blocks = utils.create_classifier_blocks(out1, out2, args, params, n_classes)
@@ -401,6 +405,11 @@ def train(epoch):
                 del outputs
             else:
                 outputs1, outputs2 = net(inputs, kernel_convolution[0], bias_convolution[0])
+
+            if args.feat_square:
+                outputs1 = torch.cat([outputs1, outputs1**2], dim=1)
+                outputs2 = torch.cat([outputs2, outputs1**2], dim=1)
+
             outputs1, outputs2 = outputs1.float(), outputs2.float()
 
             if args.normalize_net_outputs:
@@ -452,6 +461,11 @@ def test(epoch, loader=testloader, msg='Test'):
                 del outputs
             else:
                 outputs1, outputs2 = net(inputs, kernel_convolution[0], bias_convolution[0])
+
+            if args.feat_square:
+                outputs1 = torch.cat([outputs1, outputs1**2], dim=1)
+                outputs2 = torch.cat([outputs2, outputs1**2], dim=1)
+
             outputs1, outputs2 = outputs1.float(), outputs2.float()
 
             if args.normalize_net_outputs:
