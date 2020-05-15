@@ -18,7 +18,7 @@ import torch.optim as optim
 from imagenet import Imagenet32
 from utils import compute_whitening, compute_whitening_from_loader, correct_topk, select_patches_randomly, heaviside, topk, topk_heaviside, compute_classifier_outputs, create_classifier_blocks, compute_channel_mean_and_std
 
-print('metric.py')
+print('radiusneighbors.py')
 parser = argparse.ArgumentParser('classification on cifar10 based on patches neighborhood indicators for euclidian metric')
 # parameters for the patches
 parser.add_argument('--dataset', help="cifar10/?", default='cifar10')
