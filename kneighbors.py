@@ -79,7 +79,7 @@ args = parser.parse_args()
 
 
 if args.batchsize_net > 0:
-    assert args.n_channel_convolution // args.batchsize_net == args.n_channel_convolution / args.batchsize_net, 'batchsize_net must divide n_channel_convolution'
+    assert args.batchsize // args.batchsize_net == args.batchsize / args.batchsize_net, 'batchsize_net must divide batchsize'
 
 print(f'Arguments : {args}')
 
@@ -186,15 +186,16 @@ def compute_channel_mean_and_std(loader, net, n_channel_convolution,
             for batch_idx, (inputs, _) in enumerate(loader):
                 if torch.cuda.is_available():
                     inputs = inputs.half()
-                inputs = inputs.to(device)
-                if len(kernel_convolution) > 1:
+                if args.batchsize_net < args.batchsize:
                     outputs = []
-                    for i in range(len(kernel_convolution)):
-                        outputs.append(net(inputs, kernel_convolution[i], bias_convolution[i]))
-                    outputs1 = torch.cat([out[0] for out in outputs], dim=1)
-                    outputs2 = torch.cat([out[1] for out in outputs], dim=1)
+                    for i in range(args.batchsize // args.batchsize_net):
+                        inputs_batch = inputs[i*args.batchsize_net:(i+1)*args.batchsize_net].to(device)
+                        outputs.append(net(inputs_batch, kernel_convolution, bias_convolution))
+                    outputs1 = torch.cat([out[0] for out in outputs], dim=0)
+                    outputs2 = torch.cat([out[1] for out in outputs], dim=0)
                 else:
-                    outputs1, outputs2 = net(inputs, kernel_convolution[0], bias_convolution[0])
+                    inputs = inputs.to(device)
+                    outputs1, outputs2 = net(inputs, kernel_convolution, bias_convolution)
                 outputs1, outputs2 = outputs1.float(), outputs2.float()
                 n = inputs.size(0)
                 mean1 = N/(N+n) * mean1 + outputs1.mean(dim=(0, 2, 3)).double() * n/(N+n)
@@ -211,15 +212,16 @@ def compute_channel_mean_and_std(loader, net, n_channel_convolution,
             for batch_idx, (inputs, _) in enumerate(loader):
                 if torch.cuda.is_available():
                     inputs = inputs.half()
-                inputs = inputs.to(device)
-                if len(kernel_convolution) > 1:
+                if args.batchsize_net < args.batchsize:
                     outputs = []
-                    for i in range(len(kernel_convolution)):
-                        outputs.append(net(inputs, kernel_convolution[i], bias_convolution[i]))
-                    outputs1 = torch.cat([out[0] for out in outputs], dim=1)
-                    outputs2 = torch.cat([out[1] for out in outputs], dim=1)
+                    for i in range(args.batchsize // args.batchsize_net):
+                        inputs_batch = inputs[i*args.batchsize_net:(i+1)*args.batchsize_net].to(device)
+                        outputs.append(net(inputs_batch, kernel_convolution, bias_convolution))
+                    outputs1 = torch.cat([out[0] for out in outputs], dim=0)
+                    outputs2 = torch.cat([out[1] for out in outputs], dim=0)
                 else:
-                    outputs1, outputs2 = net(inputs, kernel_convolution[0], bias_convolution[0])
+                    inputs = inputs.to(device)
+                    outputs1, outputs2 = net(inputs, kernel_convolution, bias_convolution)
                 outputs1, outputs2 = outputs1.float(), outputs2.float()
                 n = inputs.size(0)
                 std1 = N/(N+n) * std1 + ((outputs1 - mean1)**2).mean(dim=(0, 2, 3)).double() * n/(N+n)
@@ -324,7 +326,7 @@ if torch.cuda.is_available():
 
 criterion = nn.CrossEntropyLoss()
 
-k_neighbors = int(n_channel_convolution * args.kneighbors_fraction) if args.batchsize_net <= 0 else int(args.batchsize_net * args.kneighbors_fraction)
+k_neighbors = int(n_channel_convolution * args.kneighbors_fraction)
 
 net = Net(spatialsize_avg_pooling, stride_avg_pooling, finalsize_avg_pooling,
           k_neighbors=k_neighbors).to(device)
@@ -345,18 +347,14 @@ print(f'N parameters : {sum([np.prod(list(param.shape)) for param in params])/1e
 
 del x, out1, out2
 
-if args.batchsize_net > 0:
-    kernel_convolution = [kernel_convolution[i*args.batchsize_net:(i+1)*args.batchsize_net] for i in range(args.n_channel_convolution // args.batchsize_net)]
-    bias_convolution = [bias_convolution[:, i*args.batchsize_net:(i+1)*args.batchsize_net] for i in range(args.n_channel_convolution // args.batchsize_net)]
-else:
-    kernel_convolution = [kernel_convolution]
-    bias_convolution = [bias_convolution]
-
 if torch.cuda.is_available() and not args.no_jit:
     print('optimizing net execution with torch.jit')
-    trial = torch.rand(args.batchsize//n_gpus, 3, spatial_size, spatial_size).half().to(device)
+    if args.batchsize_net > 0:
+        trial = torch.rand(args.batchsize_net//n_gpus, 3, spatial_size, spatial_size).half().to(device)
+    else:
+        trial = torch.rand(args.batchsize//n_gpus, 3, spatial_size, spatial_size).half().to(device)
 
-    inputs = {'forward': (trial, kernel_convolution[0], bias_convolution[0])}
+    inputs = {'forward': (trial, kernel_convolution, bias_convolution)}
     with torch.jit.optimized_execution(True):
         net = torch.jit.trace_module(net, inputs, check_trace=False, check_tolerance=False)
     del inputs
@@ -393,18 +391,19 @@ def train(epoch):
     for batch_idx, (inputs, targets) in enumerate(trainloader):
         if torch.cuda.is_available():
             inputs = inputs.half()
-        inputs, targets = inputs.to(device), targets.to(device)
+        targets = targets.to(device)
 
         with torch.no_grad():
-            if len(kernel_convolution) > 1:
+            if args.batchsize_net < args.batchsize:
                 outputs = []
-                for i in range(len(kernel_convolution)):
-                    outputs.append(net(inputs, kernel_convolution[i], bias_convolution[i]))
-                outputs1 = torch.cat([out[0] for out in outputs], dim=1)
-                outputs2 = torch.cat([out[1] for out in outputs], dim=1)
-                del outputs
+                for i in range(args.batchsize // args.batchsize_net):
+                    inputs_batch = inputs[i*args.batchsize_net:(i+1)*args.batchsize_net].to(device)
+                    outputs.append(net(inputs_batch, kernel_convolution, bias_convolution))
+                outputs1 = torch.cat([out[0] for out in outputs], dim=0)
+                outputs2 = torch.cat([out[1] for out in outputs], dim=0)
             else:
-                outputs1, outputs2 = net(inputs, kernel_convolution[0], bias_convolution[0])
+                inputs = inputs.to(device)
+                outputs1, outputs2 = net(inputs, kernel_convolution, bias_convolution)
 
             if args.feat_square:
                 outputs1 = torch.cat([outputs1, outputs1**2], dim=1)
@@ -451,16 +450,17 @@ def test(epoch, loader=testloader, msg='Test'):
         for batch_idx, (inputs, targets) in enumerate(loader):
             if torch.cuda.is_available():
                 inputs = inputs.half()
-            inputs, targets = inputs.to(device), targets.to(device)
-            if len(kernel_convolution) > 1:
+            targets = targets.to(device)
+            if args.batchsize_net < args.batchsize:
                 outputs = []
-                for i in range(len(kernel_convolution)):
-                    outputs.append(net(inputs, kernel_convolution[i], bias_convolution[i]))
-                outputs1 = torch.cat([out[0] for out in outputs], dim=1)
-                outputs2 = torch.cat([out[1] for out in outputs], dim=1)
-                del outputs
+                for i in range(args.batchsize // args.batchsize_net):
+                    inputs_batch = inputs[i*args.batchsize_net:(i+1)*args.batchsize_net].to(device)
+                    outputs.append(net(inputs_batch, kernel_convolution, bias_convolution))
+                outputs1 = torch.cat([out[0] for out in outputs], dim=0)
+                outputs2 = torch.cat([out[1] for out in outputs], dim=0)
             else:
-                outputs1, outputs2 = net(inputs, kernel_convolution[0], bias_convolution[0])
+                inputs = inputs.to(device)
+                outputs1, outputs2 = net(inputs, kernel_convolution, bias_convolution)
 
             if args.feat_square:
                 outputs1 = torch.cat([outputs1, outputs1**2], dim=1)
