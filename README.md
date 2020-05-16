@@ -15,11 +15,12 @@
       ```
       python radiusneighbors.py --num_workers 4 --n_channel_convolution 16384 --batchsize 128 --dataset  cifar10 --stride_avg_pooling 3 --spatialsize_avg_pooling 5  --lr "{0:3e-3,100:3e-4,150:3e-5}" --nepochs 175 --optimizer SGD --bottleneck_dim 128 --padding_mode reflect --shrink heaviside --convolutional_classifier 6 --whitening_reg 1e-4 --bias 0.07 --sgd_momentum 0.9 --batch_norm
       ```
-
+      Best test acc. 84.61  at epoch 135/174, final acc. 84.4
     * 64K patches
       ```
       python radiusneighbors.py --num_workers 4 --n_channel_convolution 65536 --batchsize_net 16384 --batchsize 128 --dataset cifar10 --stride_avg_pooling 3 --spatialsize_avg_pooling 5 --lr "{0:1e-3,100:1e-4,150:1e-5}" --nepochs 175 --optimizer SGD --bottleneck_dim 128 --padding_mode reflect --shrink heaviside --convolutional_classifier 6 --whitening_reg 1e-4 --bias 0.07 --sgd_momentum 0.9 --batch_norm
       ```
+      Best test acc. 86.24  at epoch 118/174, final acc 85.9
 
   * K-nearest neighbors for whitening linear distance
     * 2K patches
@@ -40,12 +41,13 @@
       python radiusneighbors.py --num_workers 4 --n_channel_convolution 2048 --batchsize 128 --dataset cifar10 --stride_avg_pooling 3 --spatialsize_avg_pooling 5  --lr "{0:3e-3,100:3e-4,150:3e-5}" --nepochs 175 --optimizer SGD --bottleneck_dim 1024  --relu_after_bottleneck --bottleneck_spatialsize 3 --padding_mode reflect --shrink heaviside --convolutional_classifier 6 --whitening_reg 1e-4 --bias 0.07 --sgd_momentum 0.9 --batch_norm
       ```
       Best test acc. 87.77  at epoch 145/174, final acc 87.7
+
   * K-nearest neighbors for whitening linear distance
     * 2K patches
       ```
-      python kneighbors.py --n_channel_convolution 2048 --batchsize 128 --dataset cifar10 --stride_avg_pooling 3 --spatialsize_avg_pooling 5 --lr "{0:3e-3,40:3e-4,60:3e-5}" --nepochs 70 --optimizer SGD --bottleneck_dim 2048 --bottleneck_spatialsize 3 --relu_after_bottleneck --padding_mode reflect --kneighbors_fraction 0.4 --whitening_reg 1e-3 --sgd_momentum 0.9 --convolutional_classifier 6 --batch_norm
+      python kneighbors.py --n_channel_convolution 2048 --batchsize 128 --dataset cifar10 --stride_avg_pooling 3 --spatialsize_avg_pooling 5 --lr "{0:3e-3,100:3e-4,150:3e-5}" --nepochs 175 --optimizer SGD --bottleneck_dim 2048 --bottleneck_spatialsize 3 --relu_after_bottleneck --padding_mode reflect --kneighbors_fraction 0.4 --whitening_reg 1e-3 --sgd_momentum 0.9 --convolutional_classifier 6 --batch_norm
       ```
-      Best test acc. 87.43 at epoch 69/69
+      Best test acc. 88.03 at epoch 168/174 final acc 87.9
 
 
 ## Imagenet 64
