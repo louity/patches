@@ -291,7 +291,8 @@ whitening_eigvals = whitening['whitening_eigvals']
 patches_mean = whitening['patches_mean']
 
 if args.whitening_reg >= 0:
-    inv_sqrt_eigvals = np.diag(np.power(whitening_eigvals + args.whitening_reg, -1/2))
+    # inv_sqrt_eigvals = np.diag(np.power(whitening_eigvals + args.whitening_reg, -1/2))
+    inv_sqrt_eigvals = np.diag(1. / np.sqrt(whitening_eigvals + args.whitening_reg))
     whitening_op = whitening_eigvecs.dot(inv_sqrt_eigvals).astype('float32')
 else:
     whitening_op = np.eye(whitening_eigvals.size, dtype='float32')
