@@ -186,10 +186,11 @@ def compute_channel_mean_and_std(loader, net, n_channel_convolution,
             for batch_idx, (inputs, _) in enumerate(loader):
                 if torch.cuda.is_available():
                     inputs = inputs.half()
-                if args.batchsize_net < args.batchsize:
+                if args.batchsize_net > 0:
                     outputs = []
-                    for i in range(args.batchsize // args.batchsize_net):
-                        inputs_batch = inputs[i*args.batchsize_net:(i+1)*args.batchsize_net].to(device)
+                    for i in range(np.ceil(inputs.size(0)/args.batchsize_net).astype('int')):
+                        start, end = i*args.batchsize_net, min((i+1)*args.batchsize_net, inputs.size(0))
+                        inputs_batch = inputs[start:end].to(device)
                         outputs.append(net(inputs_batch, kernel_convolution, bias_convolution))
                     outputs1 = torch.cat([out[0] for out in outputs], dim=0)
                     outputs2 = torch.cat([out[1] for out in outputs], dim=0)
@@ -212,10 +213,11 @@ def compute_channel_mean_and_std(loader, net, n_channel_convolution,
             for batch_idx, (inputs, _) in enumerate(loader):
                 if torch.cuda.is_available():
                     inputs = inputs.half()
-                if args.batchsize_net < args.batchsize:
+                if args.batchsize_net > 0:
                     outputs = []
-                    for i in range(args.batchsize // args.batchsize_net):
-                        inputs_batch = inputs[i*args.batchsize_net:(i+1)*args.batchsize_net].to(device)
+                    for i in range(np.ceil(inputs.size(0)/args.batchsize_net).astype('int')):
+                        start, end = i*args.batchsize_net, min((i+1)*args.batchsize_net, inputs.size(0))
+                        inputs_batch = inputs[start:end].to(device)
                         outputs.append(net(inputs_batch, kernel_convolution, bias_convolution))
                     outputs1 = torch.cat([out[0] for out in outputs], dim=0)
                     outputs2 = torch.cat([out[1] for out in outputs], dim=0)
@@ -394,10 +396,11 @@ def train(epoch):
         targets = targets.to(device)
 
         with torch.no_grad():
-            if args.batchsize_net < args.batchsize:
+            if args.batchsize_net > 0:
                 outputs = []
-                for i in range(args.batchsize // args.batchsize_net):
-                    inputs_batch = inputs[i*args.batchsize_net:(i+1)*args.batchsize_net].to(device)
+                for i in range(np.ceil(inputs.size(0)/args.batchsize_net).astype('int')):
+                    start, end = i*args.batchsize_net, min((i+1)*args.batchsize_net, inputs.size(0))
+                    inputs_batch = inputs[start:end].to(device)
                     outputs.append(net(inputs_batch, kernel_convolution, bias_convolution))
                 outputs1 = torch.cat([out[0] for out in outputs], dim=0)
                 outputs2 = torch.cat([out[1] for out in outputs], dim=0)
@@ -451,10 +454,12 @@ def test(epoch, loader=testloader, msg='Test'):
             if torch.cuda.is_available():
                 inputs = inputs.half()
             targets = targets.to(device)
-            if args.batchsize_net < args.batchsize:
+            if args.batchsize_net > 0:
                 outputs = []
-                for i in range(args.batchsize // args.batchsize_net):
-                    inputs_batch = inputs[i*args.batchsize_net:(i+1)*args.batchsize_net].to(device)
+                outputs = []
+                for i in range(np.ceil(inputs.size(0)/args.batchsize_net).astype('int')):
+                    start, end = i*args.batchsize_net, min((i+1)*args.batchsize_net, inputs.size(0))
+                    inputs_batch = inputs[start:end].to(device)
                     outputs.append(net(inputs_batch, kernel_convolution, bias_convolution))
                 outputs1 = torch.cat([out[0] for out in outputs], dim=0)
                 outputs2 = torch.cat([out[1] for out in outputs], dim=0)
