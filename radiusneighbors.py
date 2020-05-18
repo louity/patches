@@ -208,14 +208,16 @@ whitening_file = f'data/whitening_{args.dataset}_patchsize{spatialsize_convoluti
 
 if not os.path.exists(whitening_file):
     if args.dataset == 'cifar10':
+        stride = 1
         trainset_whitening = CIFAR10(root='./data', train=True, download=True, transform=transforms.ToTensor())
         trainloader_whitening = torch.utils.data.DataLoader(trainset_whitening, batch_size=1000, shuffle=False, num_workers=args.num_workers)
     elif args.dataset in ['imagenet32', 'imagenet64', 'imagenet128']:
+        stride = 2
         trainset_whitening = Imagenet32(args.path_train, transform=transforms.ToTensor(), sz=spatial_size, n_arrays=n_arrays_train)
         trainloader_whitening = torch.utils.data.DataLoader(
             trainset_whitening, batch_size=500, shuffle=False,
             num_workers=args.num_workers, pin_memory=True)
-    patches_mean, whitening_eigvecs, whitening_eigvals  = compute_whitening_from_loader(trainloader_whitening, patch_size=spatialsize_convolution)
+    patches_mean, whitening_eigvecs, whitening_eigvals  = compute_whitening_from_loader(trainloader_whitening, patch_size=spatialsize_convolution, stride=stride)
     del trainloader_whitening
     del trainset_whitening
     np.savez(whitening_file, patches_mean=patches_mean,
