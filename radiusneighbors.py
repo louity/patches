@@ -413,7 +413,7 @@ def test(epoch, loader=testloader, msg='Test'):
             outputs, targets = compute_classifier_outputs(
                 outputs1, outputs2, targets, args, batch_norm1,
                 batch_norm2, classifier1, classifier2, classifier,
-                train=True)
+                train=False)
             loss = criterion(outputs, targets)
 
             outputs_list.append(outputs)

@@ -158,7 +158,7 @@ def compute_classifier_outputs(outputs1, outputs2, targets, args, batch_norm1, b
         if args.bottleneck_dim > 0:
             if args.relu_after_bottleneck:
                 outputs = F.relu(outputs)
-                if args.dropout > 0:
+                if args.dropout > 0 and train:
                     outputs = F.dropout(outputs, p=args.dropout)
             outputs = classifier(outputs)
             outputs = F.adaptive_avg_pool2d(outputs, 1)
