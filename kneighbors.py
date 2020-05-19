@@ -35,6 +35,7 @@ parser.add_argument('--whitening_reg', default=0.001, type=float, help='regulari
 parser.add_argument('--stride_convolution', default=1, type=int)
 parser.add_argument('--stride_avg_pooling', default=2, type=int)
 parser.add_argument('--spatialsize_avg_pooling', default=5, type=int)
+parser.add_argument('--kneighbors', default=0, type=int)
 parser.add_argument('--kneighbors_fraction', default=0.25, type=float)
 parser.add_argument('--finalsize_avg_pooling', default=0, type=int)
 
@@ -74,6 +75,7 @@ parser.add_argument('--torch_seed', type=int, default=0)
 parser.add_argument('--save_model', action='store_true', help='saves the model')
 parser.add_argument('--save_best_model', action='store_true', help='saves the best model')
 parser.add_argument('--resume', default='', help='filepath of checkpoint to load the model')
+parser.add_argument('--summary_file', default='', help='file to write summary')
 
 args = parser.parse_args()
 
@@ -329,7 +331,7 @@ if torch.cuda.is_available():
 
 criterion = nn.CrossEntropyLoss()
 
-k_neighbors = int(n_channel_convolution * args.kneighbors_fraction)
+k_neighbors = args.kneighbors if args.kneighbors > 0 else int(n_channel_convolution * args.kneighbors_fraction)
 
 net = Net(spatialsize_avg_pooling, stride_avg_pooling, finalsize_avg_pooling,
           k_neighbors=k_neighbors).to(device)
@@ -429,15 +431,16 @@ def train(epoch):
         optimizer.step()
 
         if torch.isnan(loss):
-            return False
+            return False, None
         train_loss += loss.item()
         _, predicted = outputs.max(1)
         total += targets.size(0)
         correct += predicted.eq(targets).sum().item()
 
+    train_acc = 100. * correct / total
     print('Train, epoch: {}; Loss: {:.2f} | Acc: {:.1f} ; kneighbors_fraction {:.3f}'.format(
-        epoch, train_loss / (batch_idx + 1), 100. * correct / total, args.kneighbors_fraction))
-    return True
+        epoch, train_loss / (batch_idx + 1), train_acc, args.kneighbors_fraction))
+    return True, train_acc
 
 
 def test(epoch, loader=testloader, msg='Test'):
@@ -546,7 +549,7 @@ for i in range(start_epoch, args.nepochs):
             optimizer = optim.SGD(params, lr=learning_rates[i], momentum=args.sgd_momentum, weight_decay=args.weight_decay)
         else:
             raise NotImplementedError('optimizer {} not implemented'.format(args.optimizer))
-    no_nan_in_train_loss = train(i)
+    no_nan_in_train_loss, train_acc = train(i)
     if not no_nan_in_train_loss:
         print(f'Epoch {i}, nan in loss, stopping training')
         break
@@ -575,3 +578,7 @@ for i in range(start_epoch, args.nepochs):
 print(f'Best test acc. {best_test_acc} at epoch {best_epoch}/{i}')
 hours = (time.time() - start_time) / 3600
 print(f'Done in {hours:.1f} hours with {n_gpus} GPU')
+
+if args.summary_file:
+    with open(args.summary_file, "a+") as f:
+        f.write(f'args: {args}, final_train_acc: {train_acc}, final_test_acc: {test_acc}, best_test_acc: {best_test_acc}')
