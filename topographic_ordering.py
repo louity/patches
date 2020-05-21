@@ -20,7 +20,7 @@ import os
 class Struct:
 	def __init__(self, **entries):
 		self.__dict__.update(entries)
-args = {'dataset':'cifar10',
+args = {'dataset':'imagenet32',
 		'no_padding':False,
 		'batchsize':128,
 		'num_workers':4,

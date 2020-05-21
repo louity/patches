@@ -44,7 +44,7 @@ def eigvals_patches(trainloader_whitening,patch_sizes,whitening_regs):
         whitened_eigvals = torch.cat([eigvals.unsqueeze(1), whitened_eigvals,whitened_eigvals_2], dim=1)
         whitened_eigvals = torch.einsum('ij,j->ij',whitened_eigvals,1./whitened_eigvals[0,:])
         all_whitened_eigvals.append(whitened_eigvals)
-
+        print(f'eingenvalues for patch size {patch_size}')
     #all_whitened_eigvals = torch.stack(all_whitened_eigvals)
     #all_whitened_eigvals = torch.einsum('ijk,ik->ijk',all_whitened_eigvals,1./all_whitened_eigvals[:,0,:])
 
