@@ -30,6 +30,7 @@ parser.add_argument('--n_channel_convolution', default=256, type=int)
 parser.add_argument('--spatialsize_convolution', default=6, type=int)
 parser.add_argument('--padding_mode', default='constant', choices=['constant', 'reflect', 'symmetric'], help='type of padding for torch RandomCrop')
 parser.add_argument('--whitening_reg', default=0.001, type=float, help='regularization bias for zca whitening, negative values means no whitening')
+parser.add_argument('--gaussian_patches', action='store_true', help='patches sampled for gaussian RV')
 
 # parameters for the extraction
 parser.add_argument('--stride_convolution', default=1, type=int)
@@ -50,6 +51,7 @@ parser.add_argument('--bottleneck_spatialsize', type=int, default=1, help='spati
 parser.add_argument('--relu_after_bottleneck', action='store_true', help='add relu after bottleneck ')
 parser.add_argument('--dropout', type=float, default=0., help='dropout after relu')
 parser.add_argument('--feat_square', action='store_true', help='add square features')
+parser.add_argument('--resnet', action='store_true', help='resnet classifier')
 
 
 # parameters of the optimizer
@@ -317,6 +319,13 @@ W_patches_norm_square = np.linalg.norm((patches).dot(whitening_op), axis=1)**2
 bias_convolution = torch.from_numpy(0.5 * W_patches_norm_square.astype('float32')).view(1, -1, 1, 1)
 print(f'bias convolution shape: {bias_convolution.shape}')
 
+kernel_convolution = torch.from_numpy(WTW_patches.astype('float32')).view(orig_shape)
+
+if args.gaussian_patches:
+    patches = np.random.normal(0, 1, size=patches.shape)
+    kernel_convolution = torch.from_numpy(patches.dot(whitening_op.T).astype('float32')).view(orig_shape)
+    patches_norm_square = np.linalg.norm(patches, axis=1)**2
+    bias_convolution = torch.from_numpy(0.5 * patches_norm_square.astype('float32')).view(1, -1, 1, 1)
 
 if args.no_cudnn:
     torch.backends.cudnn.enabled = False
@@ -345,7 +354,12 @@ if args.feat_square:
     out2 = torch.cat([out2, out1**2], dim=1)
 print(f'Net output size: out1 {out1.shape[-3:]} out2 {out2.shape[-3:]}')
 
-classifier_blocks = utils.create_classifier_blocks(out1, out2, args, params, n_classes)
+if args.resnet:
+    resnet = utils.ResNet(2*n_channel_convolution).to(device)
+    params += list(resnet.parameters())
+    classifier_blocks = [None, None, None, None, None]
+else:
+    classifier_blocks = utils.create_classifier_blocks(out1, out2, args, params, n_classes)
 
 print(f'Parameters shape {[param.shape for param in params]}')
 print(f'N parameters : {sum([np.prod(list(param.shape)) for param in params])/1e6} millions')
@@ -415,14 +429,20 @@ def train(epoch):
                 outputs1 = torch.cat([outputs1, outputs1**2], dim=1)
                 outputs2 = torch.cat([outputs2, outputs1**2], dim=1)
 
-            outputs1, outputs2 = outputs1.float(), outputs2.float()
+            if args.resnet:
+                outputs = torch.cat([outputs1, outputs2], dim=1).float()
+            else:
+                outputs1, outputs2 = outputs1.float(), outputs2.float()
 
+        optimizer.zero_grad()
+        if args.resnet:
+            outputs = resnet(outputs)
+        else:
             if args.normalize_net_outputs:
                 outputs1 = (outputs1 - mean1) / std1
                 outputs2 = (outputs2 - mean2) / std2
 
-        optimizer.zero_grad()
-        outputs, targets = utils.compute_classifier_outputs(outputs1, outputs2, targets, args, batch_norm1,
+            outputs, targets = utils.compute_classifier_outputs(outputs1, outputs2, targets, args, batch_norm1,
                 batch_norm2, classifier1, classifier2, classifier,
                 train=True)
 
@@ -460,7 +480,6 @@ def test(epoch, loader=testloader, msg='Test'):
             targets = targets.to(device)
             if args.batchsize_net > 0:
                 outputs = []
-                outputs = []
                 for i in range(np.ceil(inputs.size(0)/args.batchsize_net).astype('int')):
                     start, end = i*args.batchsize_net, min((i+1)*args.batchsize_net, inputs.size(0))
                     inputs_batch = inputs[start:end].to(device)
@@ -475,17 +494,21 @@ def test(epoch, loader=testloader, msg='Test'):
                 outputs1 = torch.cat([outputs1, outputs1**2], dim=1)
                 outputs2 = torch.cat([outputs2, outputs1**2], dim=1)
 
-            outputs1, outputs2 = outputs1.float(), outputs2.float()
+            if args.resnet:
+                outputs = torch.cat([outputs1, outputs2], dim=1).float()
+                outputs = resnet(outputs)
+            else:
+                outputs1, outputs2 = outputs1.float(), outputs2.float()
 
-            if args.normalize_net_outputs:
-                outputs1 = (outputs1 - mean1) / std1
-                outputs2 = (outputs2 - mean2) / std2
+                if args.normalize_net_outputs:
+                    outputs1 = (outputs1 - mean1) / std1
+                    outputs2 = (outputs2 - mean2) / std2
 
+                outputs, targets = utils.compute_classifier_outputs(
+                    outputs1, outputs2, targets, args, batch_norm1,
+                    batch_norm2, classifier1, classifier2, classifier,
+                    train=False)
 
-            outputs, targets = utils.compute_classifier_outputs(
-                outputs1, outputs2, targets, args, batch_norm1,
-                batch_norm2, classifier1, classifier2, classifier,
-                train=False)
             loss = criterion(outputs, targets)
 
             outputs_list.append(outputs)
