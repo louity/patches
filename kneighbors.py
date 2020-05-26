@@ -49,6 +49,7 @@ parser.add_argument('--bottleneck_dim', default=0, type=int, help='bottleneck di
 parser.add_argument('--convolutional_classifier', type=int, default=0, help='size of the convolution for convolutional classifier')
 parser.add_argument('--bottleneck_spatialsize', type=int, default=1, help='spatial size of the bottleneck')
 parser.add_argument('--relu_after_bottleneck', action='store_true', help='add relu after bottleneck ')
+parser.add_argument('--bn_after_bottleneck', action='store_true', help='add batch norm after bottleneck ')
 parser.add_argument('--dropout', type=float, default=0., help='dropout after relu')
 parser.add_argument('--feat_square', action='store_true', help='add square features')
 parser.add_argument('--resnet', action='store_true', help='resnet classifier')
@@ -195,12 +196,12 @@ def compute_channel_mean_and_std(loader, net, n_channel_convolution,
                     for i in range(np.ceil(inputs.size(0)/args.batchsize_net).astype('int')):
                         start, end = i*args.batchsize_net, min((i+1)*args.batchsize_net, inputs.size(0))
                         inputs_batch = inputs[start:end].to(device)
-                        outputs.append(net(inputs_batch, kernel_convolution, bias_convolution))
+                        outputs.append(net(inputs_batch))
                     outputs1 = torch.cat([out[0] for out in outputs], dim=0)
                     outputs2 = torch.cat([out[1] for out in outputs], dim=0)
                 else:
                     inputs = inputs.to(device)
-                    outputs1, outputs2 = net(inputs, kernel_convolution, bias_convolution)
+                    outputs1, outputs2 = net(inputs)
                 outputs1, outputs2 = outputs1.float(), outputs2.float()
                 n = inputs.size(0)
                 mean1 = N/(N+n) * mean1 + outputs1.mean(dim=(0, 2, 3)).double() * n/(N+n)
@@ -222,12 +223,12 @@ def compute_channel_mean_and_std(loader, net, n_channel_convolution,
                     for i in range(np.ceil(inputs.size(0)/args.batchsize_net).astype('int')):
                         start, end = i*args.batchsize_net, min((i+1)*args.batchsize_net, inputs.size(0))
                         inputs_batch = inputs[start:end].to(device)
-                        outputs.append(net(inputs_batch, kernel_convolution, bias_convolution))
+                        outputs.append(net(inputs_batch))
                     outputs1 = torch.cat([out[0] for out in outputs], dim=0)
                     outputs2 = torch.cat([out[1] for out in outputs], dim=0)
                 else:
                     inputs = inputs.to(device)
-                    outputs1, outputs2 = net(inputs, kernel_convolution, bias_convolution)
+                    outputs1, outputs2 = net(inputs)
                 outputs1, outputs2 = outputs1.float(), outputs2.float()
                 n = inputs.size(0)
                 std1 = N/(N+n) * std1 + ((outputs1 - mean1)**2).mean(dim=(0, 2, 3)).double() * n/(N+n)
@@ -240,27 +241,24 @@ def compute_channel_mean_and_std(loader, net, n_channel_convolution,
 
 
 class Net(nn.Module):
-    def __init__(self, spatialsize_avg_pooling, stride_avg_pooling, finalsize_avg_pooling, k_neighbors=1):
+    def __init__(self, kernel_convolution, bias_convolution, spatialsize_avg_pooling, stride_avg_pooling, finalsize_avg_pooling, k_neighbors=1):
         super(Net, self).__init__()
+        self.kernel_convolution = nn.Parameter(kernel_convolution, requires_grad=False)
+        self.bias_convolution = nn.Parameter(bias_convolution, requires_grad=False)
         self.pool_size = spatialsize_avg_pooling
         self.pool_stride = stride_avg_pooling
         self.finalsize_avg_pooling = finalsize_avg_pooling
         self.k_neighbors = k_neighbors
 
-    # def forward(self, x, conv_weight, conv_bias):
-        # out = F.conv2d(x, conv_weight)
-        # out = lowestk_heaviside(torch.cat([-out + conv_bias, out + conv_bias], dim=1), 2*self.k_neighbors)
-        # out = F.avg_pool2d(out, self.pool_size, stride=self.pool_stride, ceil_mode=True)
-        # return out[:, :conv_weight.size(0)].float(), out[:, conv_weight.size(0):].float()
 
-    def forward(self, x, conv_weight, conv_bias):
-        out = F.conv2d(x, conv_weight)
+    def forward(self, x):
+        out = F.conv2d(x, self.kernel_convolution)
 
-        out1 = lowestk_heaviside(-out + conv_bias, self.k_neighbors)
+        out1 = lowestk_heaviside(-out + self.bias_convolution, self.k_neighbors)
         out1 = F.avg_pool2d(out1, self.pool_size, stride=self.pool_stride, ceil_mode=True)
         if self.finalsize_avg_pooling > 0:
             out1 = F.adaptive_avg_pool2d(out1, self.finalsize_avg_pooling)
-        out2 = lowestk_heaviside(out + conv_bias, self.k_neighbors)
+        out2 = lowestk_heaviside(out + self.bias_convolution, self.k_neighbors)
         out2 = F.avg_pool2d(out2, self.pool_size, stride=self.pool_stride, ceil_mode=True)
         if self.finalsize_avg_pooling > 0:
             out2 = F.adaptive_avg_pool2d(out2, self.finalsize_avg_pooling)
@@ -342,13 +340,13 @@ criterion = nn.CrossEntropyLoss()
 
 k_neighbors = args.kneighbors if args.kneighbors > 0 else int(n_channel_convolution * args.kneighbors_fraction)
 
-net = Net(spatialsize_avg_pooling, stride_avg_pooling, finalsize_avg_pooling,
+net = Net(kernel_convolution, bias_convolution, spatialsize_avg_pooling, stride_avg_pooling, finalsize_avg_pooling,
           k_neighbors=k_neighbors).to(device)
 
 x = torch.rand(1, 3, spatial_size, spatial_size).half().to(device)
 
 
-out1, out2 = net(x, kernel_convolution, bias_convolution)
+out1, out2 = net(x)# , kernel_convolution, bias_convolution)
 if args.feat_square:
     out1 = torch.cat([out1, out1**2], dim=1)
     out2 = torch.cat([out2, out1**2], dim=1)
@@ -357,7 +355,7 @@ print(f'Net output size: out1 {out1.shape[-3:]} out2 {out2.shape[-3:]}')
 if args.resnet:
     resnet = utils.ResNet(2*n_channel_convolution).to(device)
     params += list(resnet.parameters())
-    classifier_blocks = [None, None, None, None, None]
+    classifier_blocks = [None, None, None, None, None, None]
 else:
     classifier_blocks = utils.create_classifier_blocks(out1, out2, args, params, n_classes)
 
@@ -373,7 +371,7 @@ if torch.cuda.is_available() and not args.no_jit:
     else:
         trial = torch.rand(args.batchsize//n_gpus, 3, spatial_size, spatial_size).half().to(device)
 
-    inputs = {'forward': (trial, kernel_convolution, bias_convolution)}
+    inputs = {'forward': (trial)}
     with torch.jit.optimized_execution(True):
         net = torch.jit.trace_module(net, inputs, check_trace=False, check_tolerance=False)
     del inputs
@@ -381,7 +379,7 @@ if torch.cuda.is_available() and not args.no_jit:
 
 
 if args.multigpu and n_gpus > 1:
-    print(f'{n_gpus} available, using Dataparralel for net')
+    print(f'{n_gpus} gpus available, using Dataparralel for net')
     net = nn.DataParallel(net)
 
 if args.normalize_net_outputs:
@@ -400,8 +398,8 @@ if args.normalize_net_outputs:
 
 def train(epoch):
     net.train()
-    batch_norm1, batch_norm2, classifier1, classifier2, classifier = classifier_blocks
-    for bn in [batch_norm1, batch_norm2]:
+    batch_norm1, batch_norm2, batch_norm, classifier1, classifier2, classifier = classifier_blocks
+    for bn in [batch_norm1, batch_norm2, batch_norm]:
         if bn is not None:
             bn.train()
 
@@ -418,12 +416,12 @@ def train(epoch):
                 for i in range(np.ceil(inputs.size(0)/args.batchsize_net).astype('int')):
                     start, end = i*args.batchsize_net, min((i+1)*args.batchsize_net, inputs.size(0))
                     inputs_batch = inputs[start:end].to(device)
-                    outputs.append(net(inputs_batch, kernel_convolution, bias_convolution))
+                    outputs.append(net(inputs_batch))
                 outputs1 = torch.cat([out[0] for out in outputs], dim=0)
                 outputs2 = torch.cat([out[1] for out in outputs], dim=0)
             else:
                 inputs = inputs.to(device)
-                outputs1, outputs2 = net(inputs, kernel_convolution, bias_convolution)
+                outputs1, outputs2 = net(inputs)
 
             if args.feat_square:
                 outputs1 = torch.cat([outputs1, outputs1**2], dim=1)
@@ -443,7 +441,7 @@ def train(epoch):
                 outputs2 = (outputs2 - mean2) / std2
 
             outputs, targets = utils.compute_classifier_outputs(outputs1, outputs2, targets, args, batch_norm1,
-                batch_norm2, classifier1, classifier2, classifier,
+                batch_norm2, batch_norm, classifier1, classifier2, classifier,
                 train=True)
 
         loss = criterion(outputs, targets)
@@ -466,8 +464,8 @@ def train(epoch):
 def test(epoch, loader=testloader, msg='Test'):
     global best_acc
     net.eval()
-    batch_norm1, batch_norm2, classifier1, classifier2, classifier = classifier_blocks
-    for bn in [batch_norm1, batch_norm2]:
+    batch_norm1, batch_norm2, batch_norm, classifier1, classifier2, classifier = classifier_blocks
+    for bn in [batch_norm1, batch_norm2, batch_norm]:
         if bn is not None:
             bn.eval()
 
@@ -483,12 +481,12 @@ def test(epoch, loader=testloader, msg='Test'):
                 for i in range(np.ceil(inputs.size(0)/args.batchsize_net).astype('int')):
                     start, end = i*args.batchsize_net, min((i+1)*args.batchsize_net, inputs.size(0))
                     inputs_batch = inputs[start:end].to(device)
-                    outputs.append(net(inputs_batch, kernel_convolution, bias_convolution))
+                    outputs.append(net(inputs_batch))
                 outputs1 = torch.cat([out[0] for out in outputs], dim=0)
                 outputs2 = torch.cat([out[1] for out in outputs], dim=0)
             else:
                 inputs = inputs.to(device)
-                outputs1, outputs2 = net(inputs, kernel_convolution, bias_convolution)
+                outputs1, outputs2 = net(inputs)
 
             if args.feat_square:
                 outputs1 = torch.cat([outputs1, outputs1**2], dim=1)
@@ -506,7 +504,7 @@ def test(epoch, loader=testloader, msg='Test'):
 
                 outputs, targets = utils.compute_classifier_outputs(
                     outputs1, outputs2, targets, args, batch_norm1,
-                    batch_norm2, classifier1, classifier2, classifier,
+                    batch_norm2, batch_norm, classifier1, classifier2, classifier,
                     train=False)
 
             loss = criterion(outputs, targets)
@@ -555,7 +553,7 @@ if args.resume:
             optimizer = optim.SGD(params, lr=learning_rates[closest_i], momentum=args.sgd_momentum, weight_decay=args.weight_decay)
         optimizer.load_state_dict(state['optimizer'])
 
-    for block, name in zip(classifier_blocks, ['bn1','bn2','cl1', 'cl2', 'cl' ]):
+    for block, name in zip(classifier_blocks, ['bn1','bn2', 'bn', 'cl1', 'cl2', 'cl' ]):
         if block is not None:
             block.load_state_dict(state['name'])
     acc, outputs = test(-1)
@@ -591,7 +589,7 @@ for i in range(start_epoch, args.nepochs):
             'acc': test_acc,
             'outputs': outputs,
         })
-        for block, name in zip(classifier_blocks, ['bn1','bn2','cl1', 'cl2', 'cl']):
+        for block, name in zip(classifier_blocks, ['bn1','bn2', 'bn', 'cl1', 'cl2', 'cl']):
             if block is not None:
                 state.update({
                     name: block.state_dict()

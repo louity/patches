@@ -142,7 +142,7 @@ def topk_heaviside(x, k):
     return (x > x.topk(dim=1, k=(k+1)).values.min(dim=1, keepdim=True).values).float()
 
 
-def compute_classifier_outputs(outputs1, outputs2, targets, args, batch_norm1, batch_norm2, classifier1, classifier2, classifier, train=True, relu_after_bottleneck=False):
+def compute_classifier_outputs(outputs1, outputs2, targets, args, batch_norm1, batch_norm2, batch_norm, classifier1, classifier2, classifier, train=True, relu_after_bottleneck=False):
     if args.batch_norm:
         outputs1, outputs2 = batch_norm1(outputs1), batch_norm2(outputs2)
 
@@ -160,6 +160,8 @@ def compute_classifier_outputs(outputs1, outputs2, targets, args, batch_norm1, b
                 outputs = F.relu(outputs)
                 if args.dropout > 0 and train:
                     outputs = F.dropout(outputs, p=args.dropout)
+                if batch_norm is not None:
+                    outputs = batch_norm(outputs)
             outputs = classifier(outputs)
             outputs = F.adaptive_avg_pool2d(outputs, 1)
         else:
@@ -177,7 +179,7 @@ def compute_classifier_outputs(outputs1, outputs2, targets, args, batch_norm1, b
 
 
 def create_classifier_blocks(out1, out2, args, params, n_classes):
-    batch_norm1, batch_norm2, classifier1, classifier2, classifier =  None, None, None, None, None
+    batch_norm1, batch_norm2, batch_norm, classifier1, classifier2, classifier =  None, None, None, None, None, None
 
     if args.batch_norm:
         batch_norm1 = nn.BatchNorm2d(out1.size(1), affine=(not args.no_affine_batch_norm)).to(device).float()
@@ -188,6 +190,9 @@ def create_classifier_blocks(out1, out2, args, params, n_classes):
     if args.convolutional_classifier > 0:
         if args.bottleneck_dim > 0:
             classifier = nn.Conv2d(args.bottleneck_dim, n_classes, args.convolutional_classifier).to(device).float()
+            if args.bn_after_bottleneck:
+                batch_norm = nn.BatchNorm2d(args.bottleneck_dim, affine=(not args.no_affine_batch_norm)).to(device).float()
+                params += list(batch_norm.parameters())
             params += list(classifier.parameters())
             classifier1 = nn.Conv2d(out1.size(1), args.bottleneck_dim, args.bottleneck_spatialsize).to(device).float()
             classifier2 = nn.Conv2d(out2.size(1), args.bottleneck_dim, args.bottleneck_spatialsize).to(device).float()
@@ -207,7 +212,7 @@ def create_classifier_blocks(out1, out2, args, params, n_classes):
 
     params += list(classifier1.parameters()) + list(classifier2.parameters())
 
-    return batch_norm1, batch_norm2, classifier1, classifier2, classifier
+    return batch_norm1, batch_norm2, batch_norm, classifier1, classifier2, classifier
 
 
 def compute_channel_mean_and_std(loader, net, n_channel_convolution,
