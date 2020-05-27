@@ -1,0 +1,328 @@
+kneighbors.py
+Arguments : Namespace(batch_norm=True, batchsize=128, batchsize_net=32, bottleneck_dim=128, bottleneck_spatialsize=1, convolutional_classifier=6, dataset='cifar10', dropout=0.0, feat_square=False, finalsize_avg_pooling=0, kneighbors_fraction=0.4, lr_schedule='{0:1e-3,100:1e-4,150:1e-5}', multigpu=False, n_channel_convolution=65536, nepochs=175, no_affine_batch_norm=False, no_cudnn=False, no_jit=False, no_padding=False, normalize_net_outputs=False, num_workers=4, numpy_seed=0, optimizer='SGD', padding_mode='reflect', patches_file='', path_test='/d1/dataset/imagenet32/out_data_val', path_train='/d1/dataset/imagenet32/out_data_train', relu_after_bottleneck=False, resume='', save_best_model=False, save_model=False, sgd_momentum=0.9, spatialsize_avg_pooling=5, spatialsize_convolution=6, stride_avg_pooling=3, stride_convolution=1, torch_seed=0, weight_decay=0.0, whitening_reg=0.001)
+device: cuda
+Files already downloaded and verified
+Files already downloaded and verified
+Trainset : (50000, 32, 32, 3)
+patches randomly selected: (65536, 3, 6, 6)
+kernel convolution shape: torch.Size([65536, 3, 6, 6])
+bias convolution shape: torch.Size([1, 65536, 1, 1])
+Net output size: out1 torch.Size([65536, 9, 9]) out2 torch.Size([65536, 9, 9])
+Parameters shape [torch.Size([65536]), torch.Size([65536]), torch.Size([65536]), torch.Size([65536]), torch.Size([10, 128, 6, 6]), torch.Size([10]), torch.Size([128, 65536, 1, 1]), torch.Size([128]), torch.Size([128, 65536, 1, 1]), torch.Size([128])]
+N parameters : 17.085706 millions
+optimizing net execution with torch.jit
+new lr:0.001
+Train, epoch: 0; Loss: 1.26 | Acc: 55.8 ; kneighbors_fraction 0.400
+Test, epoch: 0; Loss: 0.96 | Acc: 67.3 @1 97.2 @5 ; kneighbors_fraction 0.400
+Best acc (67.27).
+Train, epoch: 1; Loss: 1.06 | Acc: 63.6 ; kneighbors_fraction 0.400
+Test, epoch: 1; Loss: 0.94 | Acc: 67.8 @1 97.3 @5 ; kneighbors_fraction 0.400
+Best acc (67.76).
+Train, epoch: 2; Loss: 0.97 | Acc: 66.6 ; kneighbors_fraction 0.400
+Test, epoch: 2; Loss: 0.84 | Acc: 71.5 @1 98.0 @5 ; kneighbors_fraction 0.400
+Best acc (71.47).
+Train, epoch: 3; Loss: 0.92 | Acc: 68.8 ; kneighbors_fraction 0.400
+Test, epoch: 3; Loss: 0.79 | Acc: 73.2 @1 98.0 @5 ; kneighbors_fraction 0.400
+Best acc (73.18).
+Train, epoch: 4; Loss: 0.87 | Acc: 70.1 ; kneighbors_fraction 0.400
+Test, epoch: 4; Loss: 0.86 | Acc: 72.0 @1 97.6 @5 ; kneighbors_fraction 0.400
+Train, epoch: 5; Loss: 0.84 | Acc: 70.9 ; kneighbors_fraction 0.400
+Test, epoch: 5; Loss: 0.75 | Acc: 74.2 @1 98.0 @5 ; kneighbors_fraction 0.400
+Best acc (74.23).
+Train, epoch: 6; Loss: 0.81 | Acc: 72.4 ; kneighbors_fraction 0.400
+Test, epoch: 6; Loss: 0.77 | Acc: 74.8 @1 98.2 @5 ; kneighbors_fraction 0.400
+Best acc (74.82).
+Train, epoch: 7; Loss: 0.79 | Acc: 73.1 ; kneighbors_fraction 0.400
+Test, epoch: 7; Loss: 0.77 | Acc: 74.1 @1 98.1 @5 ; kneighbors_fraction 0.400
+Train, epoch: 8; Loss: 0.77 | Acc: 73.7 ; kneighbors_fraction 0.400
+Test, epoch: 8; Loss: 0.74 | Acc: 75.8 @1 98.4 @5 ; kneighbors_fraction 0.400
+Best acc (75.75).
+Train, epoch: 9; Loss: 0.74 | Acc: 74.6 ; kneighbors_fraction 0.400
+Test, epoch: 9; Loss: 0.75 | Acc: 75.4 @1 98.4 @5 ; kneighbors_fraction 0.400
+Train, epoch: 10; Loss: 0.73 | Acc: 74.9 ; kneighbors_fraction 0.400
+Test, epoch: 10; Loss: 0.77 | Acc: 75.1 @1 98.2 @5 ; kneighbors_fraction 0.400
+Train, epoch: 11; Loss: 0.70 | Acc: 75.9 ; kneighbors_fraction 0.400
+Test, epoch: 11; Loss: 0.74 | Acc: 75.5 @1 98.2 @5 ; kneighbors_fraction 0.400
+Train, epoch: 12; Loss: 0.68 | Acc: 76.6 ; kneighbors_fraction 0.400
+Test, epoch: 12; Loss: 0.72 | Acc: 76.7 @1 98.4 @5 ; kneighbors_fraction 0.400
+Best acc (76.7).
+Train, epoch: 13; Loss: 0.67 | Acc: 77.1 ; kneighbors_fraction 0.400
+Test, epoch: 13; Loss: 0.77 | Acc: 75.4 @1 98.3 @5 ; kneighbors_fraction 0.400
+Train, epoch: 14; Loss: 0.66 | Acc: 77.4 ; kneighbors_fraction 0.400
+Test, epoch: 14; Loss: 0.66 | Acc: 77.7 @1 98.8 @5 ; kneighbors_fraction 0.400
+Best acc (77.72).
+Train, epoch: 15; Loss: 0.64 | Acc: 78.1 ; kneighbors_fraction 0.400
+Test, epoch: 15; Loss: 0.73 | Acc: 77.3 @1 98.5 @5 ; kneighbors_fraction 0.400
+Train, epoch: 16; Loss: 0.63 | Acc: 78.6 ; kneighbors_fraction 0.400
+Test, epoch: 16; Loss: 0.75 | Acc: 76.4 @1 98.5 @5 ; kneighbors_fraction 0.400
+Train, epoch: 17; Loss: 0.61 | Acc: 79.0 ; kneighbors_fraction 0.400
+Test, epoch: 17; Loss: 0.72 | Acc: 77.5 @1 98.4 @5 ; kneighbors_fraction 0.400
+Train, epoch: 18; Loss: 0.60 | Acc: 79.2 ; kneighbors_fraction 0.400
+Test, epoch: 18; Loss: 0.67 | Acc: 77.6 @1 98.5 @5 ; kneighbors_fraction 0.400
+Train, epoch: 19; Loss: 0.59 | Acc: 79.8 ; kneighbors_fraction 0.400
+Test, epoch: 19; Loss: 0.66 | Acc: 78.1 @1 98.6 @5 ; kneighbors_fraction 0.400
+Best acc (78.08).
+Train, epoch: 20; Loss: 0.58 | Acc: 80.2 ; kneighbors_fraction 0.400
+Test, epoch: 20; Loss: 0.71 | Acc: 77.8 @1 98.8 @5 ; kneighbors_fraction 0.400
+Train, epoch: 21; Loss: 0.57 | Acc: 80.5 ; kneighbors_fraction 0.400
+Test, epoch: 21; Loss: 0.69 | Acc: 78.5 @1 98.6 @5 ; kneighbors_fraction 0.400
+Best acc (78.46).
+Train, epoch: 22; Loss: 0.55 | Acc: 81.0 ; kneighbors_fraction 0.400
+Test, epoch: 22; Loss: 0.69 | Acc: 78.2 @1 98.5 @5 ; kneighbors_fraction 0.400
+Train, epoch: 23; Loss: 0.55 | Acc: 81.2 ; kneighbors_fraction 0.400
+Test, epoch: 23; Loss: 0.65 | Acc: 79.5 @1 98.8 @5 ; kneighbors_fraction 0.400
+Best acc (79.45).
+Train, epoch: 24; Loss: 0.54 | Acc: 81.5 ; kneighbors_fraction 0.400
+Test, epoch: 24; Loss: 0.72 | Acc: 77.9 @1 98.4 @5 ; kneighbors_fraction 0.400
+Train, epoch: 25; Loss: 0.52 | Acc: 82.1 ; kneighbors_fraction 0.400
+Test, epoch: 25; Loss: 0.64 | Acc: 79.3 @1 98.8 @5 ; kneighbors_fraction 0.400
+Train, epoch: 26; Loss: 0.51 | Acc: 82.2 ; kneighbors_fraction 0.400
+Test, epoch: 26; Loss: 0.68 | Acc: 78.5 @1 98.8 @5 ; kneighbors_fraction 0.400
+Train, epoch: 27; Loss: 0.49 | Acc: 83.1 ; kneighbors_fraction 0.400
+Test, epoch: 27; Loss: 0.62 | Acc: 80.5 @1 99.0 @5 ; kneighbors_fraction 0.400
+Best acc (80.49).
+Train, epoch: 28; Loss: 0.49 | Acc: 83.2 ; kneighbors_fraction 0.400
+Test, epoch: 28; Loss: 0.74 | Acc: 78.6 @1 98.5 @5 ; kneighbors_fraction 0.400
+Train, epoch: 29; Loss: 0.49 | Acc: 83.2 ; kneighbors_fraction 0.400
+Test, epoch: 29; Loss: 0.69 | Acc: 79.1 @1 98.5 @5 ; kneighbors_fraction 0.400
+Train, epoch: 30; Loss: 0.47 | Acc: 83.7 ; kneighbors_fraction 0.400
+Test, epoch: 30; Loss: 0.68 | Acc: 79.8 @1 98.7 @5 ; kneighbors_fraction 0.400
+Train, epoch: 31; Loss: 0.47 | Acc: 83.9 ; kneighbors_fraction 0.400
+Test, epoch: 31; Loss: 0.67 | Acc: 79.5 @1 98.9 @5 ; kneighbors_fraction 0.400
+Train, epoch: 32; Loss: 0.46 | Acc: 84.3 ; kneighbors_fraction 0.400
+Test, epoch: 32; Loss: 0.60 | Acc: 81.6 @1 98.8 @5 ; kneighbors_fraction 0.400
+Best acc (81.58).
+Train, epoch: 33; Loss: 0.45 | Acc: 84.6 ; kneighbors_fraction 0.400
+Test, epoch: 33; Loss: 0.62 | Acc: 80.7 @1 98.8 @5 ; kneighbors_fraction 0.400
+Train, epoch: 34; Loss: 0.44 | Acc: 85.0 ; kneighbors_fraction 0.400
+Test, epoch: 34; Loss: 0.66 | Acc: 80.3 @1 98.8 @5 ; kneighbors_fraction 0.400
+Train, epoch: 35; Loss: 0.42 | Acc: 85.5 ; kneighbors_fraction 0.400
+Test, epoch: 35; Loss: 0.67 | Acc: 80.2 @1 98.8 @5 ; kneighbors_fraction 0.400
+Train, epoch: 36; Loss: 0.43 | Acc: 85.1 ; kneighbors_fraction 0.400
+Test, epoch: 36; Loss: 0.72 | Acc: 79.0 @1 98.8 @5 ; kneighbors_fraction 0.400
+Train, epoch: 37; Loss: 0.41 | Acc: 85.7 ; kneighbors_fraction 0.400
+Test, epoch: 37; Loss: 0.66 | Acc: 80.5 @1 98.8 @5 ; kneighbors_fraction 0.400
+Train, epoch: 38; Loss: 0.42 | Acc: 85.8 ; kneighbors_fraction 0.400
+Test, epoch: 38; Loss: 0.64 | Acc: 80.9 @1 98.9 @5 ; kneighbors_fraction 0.400
+Train, epoch: 39; Loss: 0.40 | Acc: 86.4 ; kneighbors_fraction 0.400
+Test, epoch: 39; Loss: 0.68 | Acc: 79.9 @1 98.8 @5 ; kneighbors_fraction 0.400
+Train, epoch: 40; Loss: 0.39 | Acc: 86.5 ; kneighbors_fraction 0.400
+Test, epoch: 40; Loss: 0.74 | Acc: 78.5 @1 98.6 @5 ; kneighbors_fraction 0.400
+Train, epoch: 41; Loss: 0.39 | Acc: 86.6 ; kneighbors_fraction 0.400
+Test, epoch: 41; Loss: 0.72 | Acc: 79.6 @1 98.6 @5 ; kneighbors_fraction 0.400
+Train, epoch: 42; Loss: 0.39 | Acc: 86.6 ; kneighbors_fraction 0.400
+Test, epoch: 42; Loss: 0.70 | Acc: 79.8 @1 98.9 @5 ; kneighbors_fraction 0.400
+Train, epoch: 43; Loss: 0.38 | Acc: 87.0 ; kneighbors_fraction 0.400
+Test, epoch: 43; Loss: 0.75 | Acc: 78.6 @1 98.7 @5 ; kneighbors_fraction 0.400
+Train, epoch: 44; Loss: 0.37 | Acc: 87.4 ; kneighbors_fraction 0.400
+Test, epoch: 44; Loss: 0.66 | Acc: 81.2 @1 98.9 @5 ; kneighbors_fraction 0.400
+Train, epoch: 45; Loss: 0.37 | Acc: 87.1 ; kneighbors_fraction 0.400
+Test, epoch: 45; Loss: 0.67 | Acc: 80.7 @1 98.8 @5 ; kneighbors_fraction 0.400
+Train, epoch: 46; Loss: 0.37 | Acc: 87.3 ; kneighbors_fraction 0.400
+Test, epoch: 46; Loss: 0.70 | Acc: 80.2 @1 98.9 @5 ; kneighbors_fraction 0.400
+Train, epoch: 47; Loss: 0.35 | Acc: 87.9 ; kneighbors_fraction 0.400
+Test, epoch: 47; Loss: 0.73 | Acc: 80.0 @1 98.6 @5 ; kneighbors_fraction 0.400
+Train, epoch: 48; Loss: 0.36 | Acc: 87.9 ; kneighbors_fraction 0.400
+Test, epoch: 48; Loss: 0.66 | Acc: 81.3 @1 98.9 @5 ; kneighbors_fraction 0.400
+Train, epoch: 49; Loss: 0.33 | Acc: 88.7 ; kneighbors_fraction 0.400
+Test, epoch: 49; Loss: 0.75 | Acc: 79.1 @1 98.8 @5 ; kneighbors_fraction 0.400
+Train, epoch: 50; Loss: 0.32 | Acc: 88.9 ; kneighbors_fraction 0.400
+Test, epoch: 50; Loss: 0.68 | Acc: 81.7 @1 98.8 @5 ; kneighbors_fraction 0.400
+Best acc (81.65).
+Train, epoch: 51; Loss: 0.33 | Acc: 88.6 ; kneighbors_fraction 0.400
+Test, epoch: 51; Loss: 0.68 | Acc: 80.5 @1 98.9 @5 ; kneighbors_fraction 0.400
+Train, epoch: 52; Loss: 0.34 | Acc: 88.5 ; kneighbors_fraction 0.400
+Test, epoch: 52; Loss: 0.75 | Acc: 79.7 @1 98.7 @5 ; kneighbors_fraction 0.400
+Train, epoch: 53; Loss: 0.33 | Acc: 88.6 ; kneighbors_fraction 0.400
+Test, epoch: 53; Loss: 0.68 | Acc: 80.9 @1 99.0 @5 ; kneighbors_fraction 0.400
+Train, epoch: 54; Loss: 0.30 | Acc: 89.4 ; kneighbors_fraction 0.400
+Test, epoch: 54; Loss: 0.70 | Acc: 81.2 @1 99.0 @5 ; kneighbors_fraction 0.400
+Train, epoch: 55; Loss: 0.30 | Acc: 89.6 ; kneighbors_fraction 0.400
+Test, epoch: 55; Loss: 0.75 | Acc: 79.5 @1 98.8 @5 ; kneighbors_fraction 0.400
+Train, epoch: 56; Loss: 0.30 | Acc: 89.6 ; kneighbors_fraction 0.400
+Test, epoch: 56; Loss: 0.72 | Acc: 81.2 @1 98.8 @5 ; kneighbors_fraction 0.400
+Train, epoch: 57; Loss: 0.30 | Acc: 89.7 ; kneighbors_fraction 0.400
+Test, epoch: 57; Loss: 0.67 | Acc: 81.7 @1 99.0 @5 ; kneighbors_fraction 0.400
+Best acc (81.69).
+Train, epoch: 58; Loss: 0.29 | Acc: 89.8 ; kneighbors_fraction 0.400
+Test, epoch: 58; Loss: 0.72 | Acc: 81.4 @1 98.7 @5 ; kneighbors_fraction 0.400
+Train, epoch: 59; Loss: 0.28 | Acc: 90.4 ; kneighbors_fraction 0.400
+Test, epoch: 59; Loss: 0.70 | Acc: 81.3 @1 99.0 @5 ; kneighbors_fraction 0.400
+Train, epoch: 60; Loss: 0.28 | Acc: 90.4 ; kneighbors_fraction 0.400
+Test, epoch: 60; Loss: 0.70 | Acc: 81.3 @1 98.9 @5 ; kneighbors_fraction 0.400
+Train, epoch: 61; Loss: 0.28 | Acc: 90.3 ; kneighbors_fraction 0.400
+Test, epoch: 61; Loss: 0.73 | Acc: 81.5 @1 98.9 @5 ; kneighbors_fraction 0.400
+Train, epoch: 62; Loss: 0.29 | Acc: 90.2 ; kneighbors_fraction 0.400
+Test, epoch: 62; Loss: 0.69 | Acc: 81.3 @1 98.8 @5 ; kneighbors_fraction 0.400
+Train, epoch: 63; Loss: 0.27 | Acc: 90.9 ; kneighbors_fraction 0.400
+Test, epoch: 63; Loss: 0.75 | Acc: 81.6 @1 98.7 @5 ; kneighbors_fraction 0.400
+Train, epoch: 64; Loss: 0.27 | Acc: 90.7 ; kneighbors_fraction 0.400
+Test, epoch: 64; Loss: 0.73 | Acc: 81.6 @1 99.0 @5 ; kneighbors_fraction 0.400
+Train, epoch: 65; Loss: 0.25 | Acc: 91.2 ; kneighbors_fraction 0.400
+Test, epoch: 65; Loss: 0.70 | Acc: 81.5 @1 98.9 @5 ; kneighbors_fraction 0.400
+Train, epoch: 66; Loss: 0.25 | Acc: 91.4 ; kneighbors_fraction 0.400
+Test, epoch: 66; Loss: 0.68 | Acc: 82.2 @1 98.9 @5 ; kneighbors_fraction 0.400
+Best acc (82.24).
+Train, epoch: 67; Loss: 0.26 | Acc: 91.1 ; kneighbors_fraction 0.400
+Test, epoch: 67; Loss: 0.71 | Acc: 81.0 @1 98.9 @5 ; kneighbors_fraction 0.400
+Train, epoch: 68; Loss: 0.25 | Acc: 91.4 ; kneighbors_fraction 0.400
+Test, epoch: 68; Loss: 0.68 | Acc: 82.4 @1 99.0 @5 ; kneighbors_fraction 0.400
+Best acc (82.41).
+Train, epoch: 69; Loss: 0.25 | Acc: 91.5 ; kneighbors_fraction 0.400
+Test, epoch: 69; Loss: 0.72 | Acc: 81.3 @1 99.0 @5 ; kneighbors_fraction 0.400
+Train, epoch: 70; Loss: 0.24 | Acc: 91.6 ; kneighbors_fraction 0.400
+Test, epoch: 70; Loss: 0.71 | Acc: 81.7 @1 99.0 @5 ; kneighbors_fraction 0.400
+Train, epoch: 71; Loss: 0.25 | Acc: 91.5 ; kneighbors_fraction 0.400
+Test, epoch: 71; Loss: 0.73 | Acc: 81.4 @1 98.9 @5 ; kneighbors_fraction 0.400
+Train, epoch: 72; Loss: 0.25 | Acc: 91.4 ; kneighbors_fraction 0.400
+Test, epoch: 72; Loss: 0.73 | Acc: 81.3 @1 98.9 @5 ; kneighbors_fraction 0.400
+Train, epoch: 73; Loss: 0.24 | Acc: 91.8 ; kneighbors_fraction 0.400
+Test, epoch: 73; Loss: 0.74 | Acc: 81.7 @1 98.8 @5 ; kneighbors_fraction 0.400
+Train, epoch: 74; Loss: 0.24 | Acc: 92.0 ; kneighbors_fraction 0.400
+Test, epoch: 74; Loss: 0.80 | Acc: 80.1 @1 98.8 @5 ; kneighbors_fraction 0.400
+Train, epoch: 75; Loss: 0.21 | Acc: 92.8 ; kneighbors_fraction 0.400
+Test, epoch: 75; Loss: 0.71 | Acc: 82.4 @1 99.0 @5 ; kneighbors_fraction 0.400
+Train, epoch: 76; Loss: 0.21 | Acc: 92.6 ; kneighbors_fraction 0.400
+Test, epoch: 76; Loss: 0.73 | Acc: 81.7 @1 98.8 @5 ; kneighbors_fraction 0.400
+Train, epoch: 77; Loss: 0.22 | Acc: 92.4 ; kneighbors_fraction 0.400
+Test, epoch: 77; Loss: 0.77 | Acc: 81.7 @1 98.9 @5 ; kneighbors_fraction 0.400
+Train, epoch: 78; Loss: 0.21 | Acc: 92.8 ; kneighbors_fraction 0.400
+Test, epoch: 78; Loss: 0.77 | Acc: 81.7 @1 99.0 @5 ; kneighbors_fraction 0.400
+Train, epoch: 79; Loss: 0.22 | Acc: 92.6 ; kneighbors_fraction 0.400
+Test, epoch: 79; Loss: 0.74 | Acc: 81.9 @1 99.0 @5 ; kneighbors_fraction 0.400
+Train, epoch: 80; Loss: 0.21 | Acc: 92.6 ; kneighbors_fraction 0.400
+Test, epoch: 80; Loss: 0.74 | Acc: 82.0 @1 98.9 @5 ; kneighbors_fraction 0.400
+Train, epoch: 81; Loss: 0.22 | Acc: 92.4 ; kneighbors_fraction 0.400
+Test, epoch: 81; Loss: 0.77 | Acc: 82.1 @1 98.9 @5 ; kneighbors_fraction 0.400
+Train, epoch: 82; Loss: 0.21 | Acc: 92.8 ; kneighbors_fraction 0.400
+Test, epoch: 82; Loss: 0.66 | Acc: 83.1 @1 99.1 @5 ; kneighbors_fraction 0.400
+Best acc (83.08).
+Train, epoch: 83; Loss: 0.21 | Acc: 92.9 ; kneighbors_fraction 0.400
+Test, epoch: 83; Loss: 0.72 | Acc: 82.6 @1 99.0 @5 ; kneighbors_fraction 0.400
+Train, epoch: 84; Loss: 0.18 | Acc: 93.7 ; kneighbors_fraction 0.400
+Test, epoch: 84; Loss: 0.75 | Acc: 82.5 @1 98.9 @5 ; kneighbors_fraction 0.400
+Train, epoch: 85; Loss: 0.21 | Acc: 93.2 ; kneighbors_fraction 0.400
+Test, epoch: 85; Loss: 0.68 | Acc: 82.8 @1 99.0 @5 ; kneighbors_fraction 0.400
+Train, epoch: 86; Loss: 0.21 | Acc: 93.0 ; kneighbors_fraction 0.400
+Test, epoch: 86; Loss: 0.80 | Acc: 81.4 @1 99.0 @5 ; kneighbors_fraction 0.400
+Train, epoch: 87; Loss: 0.20 | Acc: 93.3 ; kneighbors_fraction 0.400
+Test, epoch: 87; Loss: 0.73 | Acc: 82.6 @1 99.1 @5 ; kneighbors_fraction 0.400
+Train, epoch: 88; Loss: 0.20 | Acc: 93.2 ; kneighbors_fraction 0.400
+Test, epoch: 88; Loss: 0.70 | Acc: 83.2 @1 99.1 @5 ; kneighbors_fraction 0.400
+Best acc (83.18).
+Train, epoch: 89; Loss: 0.20 | Acc: 93.4 ; kneighbors_fraction 0.400
+Test, epoch: 89; Loss: 0.79 | Acc: 81.7 @1 98.8 @5 ; kneighbors_fraction 0.400
+Train, epoch: 90; Loss: 0.19 | Acc: 93.5 ; kneighbors_fraction 0.400
+Test, epoch: 90; Loss: 0.78 | Acc: 81.8 @1 99.1 @5 ; kneighbors_fraction 0.400
+Train, epoch: 91; Loss: 0.19 | Acc: 93.7 ; kneighbors_fraction 0.400
+Test, epoch: 91; Loss: 0.77 | Acc: 82.2 @1 98.9 @5 ; kneighbors_fraction 0.400
+Train, epoch: 92; Loss: 0.18 | Acc: 93.8 ; kneighbors_fraction 0.400
+Test, epoch: 92; Loss: 0.80 | Acc: 81.4 @1 98.9 @5 ; kneighbors_fraction 0.400
+Train, epoch: 93; Loss: 0.17 | Acc: 94.1 ; kneighbors_fraction 0.400
+Test, epoch: 93; Loss: 0.76 | Acc: 82.0 @1 99.1 @5 ; kneighbors_fraction 0.400
+Train, epoch: 94; Loss: 0.18 | Acc: 93.8 ; kneighbors_fraction 0.400
+Test, epoch: 94; Loss: 0.74 | Acc: 82.4 @1 99.0 @5 ; kneighbors_fraction 0.400
+Train, epoch: 95; Loss: 0.16 | Acc: 94.4 ; kneighbors_fraction 0.400
+Test, epoch: 95; Loss: 0.75 | Acc: 82.6 @1 99.1 @5 ; kneighbors_fraction 0.400
+Train, epoch: 96; Loss: 0.18 | Acc: 94.1 ; kneighbors_fraction 0.400
+Test, epoch: 96; Loss: 0.82 | Acc: 81.3 @1 98.9 @5 ; kneighbors_fraction 0.400
+Train, epoch: 97; Loss: 0.16 | Acc: 94.4 ; kneighbors_fraction 0.400
+Test, epoch: 97; Loss: 0.74 | Acc: 82.3 @1 99.0 @5 ; kneighbors_fraction 0.400
+Train, epoch: 98; Loss: 0.17 | Acc: 94.0 ; kneighbors_fraction 0.400
+Test, epoch: 98; Loss: 0.74 | Acc: 82.9 @1 99.0 @5 ; kneighbors_fraction 0.400
+Train, epoch: 99; Loss: 0.16 | Acc: 94.6 ; kneighbors_fraction 0.400
+Test, epoch: 99; Loss: 0.71 | Acc: 83.1 @1 99.0 @5 ; kneighbors_fraction 0.400
+new lr:0.0001
+Train, epoch: 100; Loss: 0.05 | Acc: 98.5 ; kneighbors_fraction 0.400
+Test, epoch: 100; Loss: 0.55 | Acc: 85.8 @1 99.4 @5 ; kneighbors_fraction 0.400
+Best acc (85.82).
+Train, epoch: 101; Loss: 0.04 | Acc: 99.0 ; kneighbors_fraction 0.400
+Test, epoch: 101; Loss: 0.53 | Acc: 86.0 @1 99.4 @5 ; kneighbors_fraction 0.400
+Best acc (86.0).
+Train, epoch: 102; Loss: 0.04 | Acc: 99.1 ; kneighbors_fraction 0.400
+Test, epoch: 102; Loss: 0.53 | Acc: 86.2 @1 99.4 @5 ; kneighbors_fraction 0.400
+Best acc (86.21).
+Train, epoch: 103; Loss: 0.03 | Acc: 99.2 ; kneighbors_fraction 0.400
+Test, epoch: 103; Loss: 0.53 | Acc: 86.2 @1 99.4 @5 ; kneighbors_fraction 0.400
+Train, epoch: 104; Loss: 0.03 | Acc: 99.1 ; kneighbors_fraction 0.400
+Test, epoch: 104; Loss: 0.54 | Acc: 86.2 @1 99.4 @5 ; kneighbors_fraction 0.400
+Best acc (86.24).
+Train, epoch: 105; Loss: 0.03 | Acc: 99.2 ; kneighbors_fraction 0.400
+Test, epoch: 105; Loss: 0.53 | Acc: 86.2 @1 99.4 @5 ; kneighbors_fraction 0.400
+Best acc (86.25).
+Train, epoch: 106; Loss: 0.03 | Acc: 99.3 ; kneighbors_fraction 0.400
+Test, epoch: 106; Loss: 0.53 | Acc: 86.3 @1 99.4 @5 ; kneighbors_fraction 0.400
+Best acc (86.27).
+Train, epoch: 107; Loss: 0.03 | Acc: 99.2 ; kneighbors_fraction 0.400
+Test, epoch: 107; Loss: 0.52 | Acc: 86.3 @1 99.4 @5 ; kneighbors_fraction 0.400
+Best acc (86.31).
+Train, epoch: 108; Loss: 0.03 | Acc: 99.3 ; kneighbors_fraction 0.400
+Test, epoch: 108; Loss: 0.53 | Acc: 86.2 @1 99.4 @5 ; kneighbors_fraction 0.400
+Train, epoch: 109; Loss: 0.03 | Acc: 99.3 ; kneighbors_fraction 0.400
+Test, epoch: 109; Loss: 0.53 | Acc: 86.4 @1 99.5 @5 ; kneighbors_fraction 0.400
+Best acc (86.44).
+Train, epoch: 110; Loss: 0.03 | Acc: 99.4 ; kneighbors_fraction 0.400
+Test, epoch: 110; Loss: 0.53 | Acc: 86.2 @1 99.4 @5 ; kneighbors_fraction 0.400
+Train, epoch: 111; Loss: 0.03 | Acc: 99.3 ; kneighbors_fraction 0.400
+Test, epoch: 111; Loss: 0.53 | Acc: 86.4 @1 99.4 @5 ; kneighbors_fraction 0.400
+Train, epoch: 112; Loss: 0.03 | Acc: 99.3 ; kneighbors_fraction 0.400
+Test, epoch: 112; Loss: 0.53 | Acc: 86.2 @1 99.4 @5 ; kneighbors_fraction 0.400
+Train, epoch: 113; Loss: 0.03 | Acc: 99.4 ; kneighbors_fraction 0.400
+Test, epoch: 113; Loss: 0.53 | Acc: 86.4 @1 99.4 @5 ; kneighbors_fraction 0.400
+Train, epoch: 114; Loss: 0.03 | Acc: 99.3 ; kneighbors_fraction 0.400
+Test, epoch: 114; Loss: 0.53 | Acc: 86.2 @1 99.4 @5 ; kneighbors_fraction 0.400
+Train, epoch: 115; Loss: 0.03 | Acc: 99.4 ; kneighbors_fraction 0.400
+Test, epoch: 115; Loss: 0.53 | Acc: 86.3 @1 99.4 @5 ; kneighbors_fraction 0.400
+Train, epoch: 116; Loss: 0.03 | Acc: 99.4 ; kneighbors_fraction 0.400
+Test, epoch: 116; Loss: 0.53 | Acc: 86.5 @1 99.3 @5 ; kneighbors_fraction 0.400
+Best acc (86.45).
+Train, epoch: 117; Loss: 0.03 | Acc: 99.4 ; kneighbors_fraction 0.400
+Test, epoch: 117; Loss: 0.53 | Acc: 86.5 @1 99.4 @5 ; kneighbors_fraction 0.400
+Best acc (86.51).
+Train, epoch: 118; Loss: 0.02 | Acc: 99.4 ; kneighbors_fraction 0.400
+Test, epoch: 118; Loss: 0.53 | Acc: 86.4 @1 99.3 @5 ; kneighbors_fraction 0.400
+Train, epoch: 119; Loss: 0.03 | Acc: 99.4 ; kneighbors_fraction 0.400
+Test, epoch: 119; Loss: 0.53 | Acc: 86.4 @1 99.4 @5 ; kneighbors_fraction 0.400
+Train, epoch: 120; Loss: 0.02 | Acc: 99.5 ; kneighbors_fraction 0.400
+Test, epoch: 120; Loss: 0.53 | Acc: 86.5 @1 99.4 @5 ; kneighbors_fraction 0.400
+Train, epoch: 121; Loss: 0.02 | Acc: 99.5 ; kneighbors_fraction 0.400
+Test, epoch: 121; Loss: 0.53 | Acc: 86.4 @1 99.4 @5 ; kneighbors_fraction 0.400
+Train, epoch: 122; Loss: 0.02 | Acc: 99.5 ; kneighbors_fraction 0.400
+Test, epoch: 122; Loss: 0.54 | Acc: 86.3 @1 99.4 @5 ; kneighbors_fraction 0.400
+Train, epoch: 123; Loss: 0.02 | Acc: 99.5 ; kneighbors_fraction 0.400
+Test, epoch: 123; Loss: 0.53 | Acc: 86.5 @1 99.4 @5 ; kneighbors_fraction 0.400
+Best acc (86.53).
+Train, epoch: 124; Loss: 0.02 | Acc: 99.4 ; kneighbors_fraction 0.400
+Test, epoch: 124; Loss: 0.53 | Acc: 86.4 @1 99.4 @5 ; kneighbors_fraction 0.400
+Train, epoch: 125; Loss: 0.02 | Acc: 99.5 ; kneighbors_fraction 0.400
+Test, epoch: 125; Loss: 0.54 | Acc: 86.3 @1 99.3 @5 ; kneighbors_fraction 0.400
+Train, epoch: 126; Loss: 0.02 | Acc: 99.5 ; kneighbors_fraction 0.400
+Test, epoch: 126; Loss: 0.53 | Acc: 86.3 @1 99.4 @5 ; kneighbors_fraction 0.400
+Train, epoch: 127; Loss: 0.02 | Acc: 99.5 ; kneighbors_fraction 0.400
+Test, epoch: 127; Loss: 0.54 | Acc: 86.4 @1 99.4 @5 ; kneighbors_fraction 0.400
+Train, epoch: 128; Loss: 0.02 | Acc: 99.5 ; kneighbors_fraction 0.400
+Test, epoch: 128; Loss: 0.54 | Acc: 86.1 @1 99.4 @5 ; kneighbors_fraction 0.400
+Train, epoch: 129; Loss: 0.02 | Acc: 99.5 ; kneighbors_fraction 0.400
+Test, epoch: 129; Loss: 0.54 | Acc: 86.3 @1 99.4 @5 ; kneighbors_fraction 0.400
+Train, epoch: 130; Loss: 0.02 | Acc: 99.5 ; kneighbors_fraction 0.400
+Test, epoch: 130; Loss: 0.54 | Acc: 86.5 @1 99.4 @5 ; kneighbors_fraction 0.400
+Train, epoch: 131; Loss: 0.02 | Acc: 99.5 ; kneighbors_fraction 0.400
+Test, epoch: 131; Loss: 0.54 | Acc: 86.4 @1 99.4 @5 ; kneighbors_fraction 0.400
+Train, epoch: 132; Loss: 0.02 | Acc: 99.5 ; kneighbors_fraction 0.400
+Test, epoch: 132; Loss: 0.55 | Acc: 86.3 @1 99.3 @5 ; kneighbors_fraction 0.400
+Train, epoch: 133; Loss: 0.02 | Acc: 99.5 ; kneighbors_fraction 0.400
+Test, epoch: 133; Loss: 0.54 | Acc: 86.4 @1 99.4 @5 ; kneighbors_fraction 0.400
+Train, epoch: 134; Loss: 0.02 | Acc: 99.5 ; kneighbors_fraction 0.400
+Test, epoch: 134; Loss: 0.54 | Acc: 86.4 @1 99.4 @5 ; kneighbors_fraction 0.400
+Train, epoch: 135; Loss: 0.02 | Acc: 99.5 ; kneighbors_fraction 0.400
+Test, epoch: 135; Loss: 0.54 | Acc: 86.3 @1 99.3 @5 ; kneighbors_fraction 0.400
+Train, epoch: 136; Loss: 0.02 | Acc: 99.5 ; kneighbors_fraction 0.400
+Test, epoch: 136; Loss: 0.54 | Acc: 86.4 @1 99.3 @5 ; kneighbors_fraction 0.400
+Train, epoch: 137; Loss: 0.02 | Acc: 99.5 ; kneighbors_fraction 0.400
+Test, epoch: 137; Loss: 0.54 | Acc: 86.5 @1 99.4 @5 ; kneighbors_fraction 0.400
+Train, epoch: 138; Loss: 0.02 | Acc: 99.5 ; kneighbors_fraction 0.400
+Test, epoch: 138; Loss: 0.54 | Acc: 86.6 @1 99.3 @5 ; kneighbors_fraction 0.400
+Best acc (86.58).
+Train, epoch: 139; Loss: 0.02 | Acc: 99.5 ; kneighbors_fraction 0.400
+Test, epoch: 139; Loss: 0.54 | Acc: 86.5 @1 99.4 @5 ; kneighbors_fraction 0.400
+STOPPED

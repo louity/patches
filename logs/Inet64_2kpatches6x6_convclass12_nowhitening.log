@@ -1,0 +1,215 @@
+kneighbors.py
+Arguments : Namespace(batch_norm=True, batchsize=256, batchsize_net=0, bias=0.1, bottleneck_dim=192, convolutional_classifier=6, dataset='imagenet64', kneighbors_fraction=0.4, lr_schedule='{0:3e-3,50:3e-4,75:3e-5}', multigpu=False, n_channel_convolution=2048, nepochs=80, no_affine_batch_norm=False, no_cudnn=False, no_jit=False, no_padding=False, normalize_net_outputs=False, num_workers=4, numpy_seed=0, optimizer='SGD', padding_mode='reflect', patches_file='', path_test='/mnt/home/fguth/datasets/imagenet64/out_data_val', path_train='/mnt/home/fguth/datasets/imagenet64/out_data_train', resume='', save_best_model=False, save_model=False, sgd_momentum=0.9, shrink='softshrink', spatialsize_avg_pooling=5, spatialsize_convolution=6, stride_avg_pooling=3, stride_convolution=1, torch_seed=0, weight_decay=0.0, whitening_reg=-1.0)
+device: cuda
+Trainset : (1281159, 64, 64, 3)
+patches randomly selected: (2048, 3, 6, 6)
+kernel convolution shape: torch.Size([2048, 3, 6, 6])
+bias convolution shape: torch.Size([1, 2048, 1, 1])
+Net output size: out1 torch.Size([2048, 19, 19]) out2 torch.Size([2048, 19, 19])
+Parameters shape [torch.Size([2048]), torch.Size([2048]), torch.Size([2048]), torch.Size([2048]), torch.Size([1000, 192, 6, 6]), torch.Size([1000]), torch.Size([192, 2048, 1, 1]), torch.Size([192]), torch.Size([192, 2048, 1, 1]), torch.Size([192])]
+N parameters : 7.708008 millions
+optimizing net execution with torch.jit
+new lr:0.003
+Train, epoch: 0; Loss: 6.15 | Acc: 3.0 ; threshold 0.100
+Test, epoch: 0; Loss: 5.90 | Acc: 4.5 @1 12.6 @5 ; threshold 0.100
+Best acc (4.532).
+Train, epoch: 1; Loss: 5.79 | Acc: 5.2 ; threshold 0.100
+Test, epoch: 1; Loss: 5.71 | Acc: 6.0 @1 15.5 @5 ; threshold 0.100
+Best acc (6.024).
+Train, epoch: 2; Loss: 5.66 | Acc: 6.2 ; threshold 0.100
+Test, epoch: 2; Loss: 5.62 | Acc: 6.6 @1 17.0 @5 ; threshold 0.100
+Best acc (6.576).
+Train, epoch: 3; Loss: 5.58 | Acc: 6.8 ; threshold 0.100
+Test, epoch: 3; Loss: 5.58 | Acc: 7.0 @1 17.9 @5 ; threshold 0.100
+Best acc (6.992).
+Train, epoch: 4; Loss: 5.53 | Acc: 7.3 ; threshold 0.100
+Test, epoch: 4; Loss: 5.51 | Acc: 7.7 @1 19.0 @5 ; threshold 0.100
+Best acc (7.69).
+Train, epoch: 5; Loss: 5.48 | Acc: 7.8 ; threshold 0.100
+Test, epoch: 5; Loss: 5.48 | Acc: 7.9 @1 19.5 @5 ; threshold 0.100
+Best acc (7.946).
+Train, epoch: 6; Loss: 5.45 | Acc: 8.1 ; threshold 0.100
+Test, epoch: 6; Loss: 5.44 | Acc: 8.3 @1 20.0 @5 ; threshold 0.100
+Best acc (8.272).
+Train, epoch: 7; Loss: 5.41 | Acc: 8.4 ; threshold 0.100
+Test, epoch: 7; Loss: 5.43 | Acc: 8.5 @1 20.3 @5 ; threshold 0.100
+Best acc (8.476).
+Train, epoch: 8; Loss: 5.38 | Acc: 8.7 ; threshold 0.100
+Test, epoch: 8; Loss: 5.39 | Acc: 8.7 @1 20.9 @5 ; threshold 0.100
+Best acc (8.672).
+Train, epoch: 9; Loss: 5.36 | Acc: 9.0 ; threshold 0.100
+Test, epoch: 9; Loss: 5.38 | Acc: 9.0 @1 21.2 @5 ; threshold 0.100
+Best acc (9.004).
+Train, epoch: 10; Loss: 5.33 | Acc: 9.2 ; threshold 0.100
+Test, epoch: 10; Loss: 5.34 | Acc: 9.4 @1 22.0 @5 ; threshold 0.100
+Best acc (9.392).
+Train, epoch: 11; Loss: 5.31 | Acc: 9.4 ; threshold 0.100
+Test, epoch: 11; Loss: 5.32 | Acc: 9.6 @1 22.5 @5 ; threshold 0.100
+Best acc (9.604).
+Train, epoch: 12; Loss: 5.29 | Acc: 9.7 ; threshold 0.100
+Test, epoch: 12; Loss: 5.30 | Acc: 9.7 @1 22.5 @5 ; threshold 0.100
+Best acc (9.734).
+Train, epoch: 13; Loss: 5.27 | Acc: 9.8 ; threshold 0.100
+Test, epoch: 13; Loss: 5.30 | Acc: 9.6 @1 22.5 @5 ; threshold 0.100
+Train, epoch: 14; Loss: 5.25 | Acc: 10.0 ; threshold 0.100
+Test, epoch: 14; Loss: 5.30 | Acc: 9.8 @1 23.0 @5 ; threshold 0.100
+Best acc (9.764).
+Train, epoch: 15; Loss: 5.24 | Acc: 10.2 ; threshold 0.100
+Test, epoch: 15; Loss: 5.27 | Acc: 10.0 @1 23.1 @5 ; threshold 0.100
+Best acc (10.024).
+Train, epoch: 16; Loss: 5.22 | Acc: 10.3 ; threshold 0.100
+Test, epoch: 16; Loss: 5.29 | Acc: 9.8 @1 23.0 @5 ; threshold 0.100
+Train, epoch: 17; Loss: 5.21 | Acc: 10.5 ; threshold 0.100
+Test, epoch: 17; Loss: 5.24 | Acc: 10.3 @1 23.7 @5 ; threshold 0.100
+Best acc (10.304).
+Train, epoch: 18; Loss: 5.20 | Acc: 10.6 ; threshold 0.100
+Test, epoch: 18; Loss: 5.25 | Acc: 10.4 @1 23.5 @5 ; threshold 0.100
+Best acc (10.418).
+Train, epoch: 19; Loss: 5.19 | Acc: 10.7 ; threshold 0.100
+Test, epoch: 19; Loss: 5.25 | Acc: 10.2 @1 23.5 @5 ; threshold 0.100
+Train, epoch: 20; Loss: 5.17 | Acc: 10.8 ; threshold 0.100
+Test, epoch: 20; Loss: 5.24 | Acc: 10.3 @1 23.9 @5 ; threshold 0.100
+Train, epoch: 21; Loss: 5.16 | Acc: 11.0 ; threshold 0.100
+Test, epoch: 21; Loss: 5.22 | Acc: 10.5 @1 24.0 @5 ; threshold 0.100
+Best acc (10.546).
+Train, epoch: 22; Loss: 5.15 | Acc: 11.1 ; threshold 0.100
+Test, epoch: 22; Loss: 5.19 | Acc: 10.9 @1 24.4 @5 ; threshold 0.100
+Best acc (10.906).
+Train, epoch: 23; Loss: 5.14 | Acc: 11.2 ; threshold 0.100
+Test, epoch: 23; Loss: 5.20 | Acc: 10.9 @1 24.6 @5 ; threshold 0.100
+Train, epoch: 24; Loss: 5.13 | Acc: 11.3 ; threshold 0.100
+Test, epoch: 24; Loss: 5.19 | Acc: 11.1 @1 24.8 @5 ; threshold 0.100
+Best acc (11.062).
+Train, epoch: 25; Loss: 5.12 | Acc: 11.4 ; threshold 0.100
+Test, epoch: 25; Loss: 5.20 | Acc: 10.8 @1 24.4 @5 ; threshold 0.100
+Train, epoch: 26; Loss: 5.11 | Acc: 11.5 ; threshold 0.100
+Test, epoch: 26; Loss: 5.18 | Acc: 10.9 @1 25.0 @5 ; threshold 0.100
+Train, epoch: 27; Loss: 5.11 | Acc: 11.5 ; threshold 0.100
+Test, epoch: 27; Loss: 5.16 | Acc: 11.3 @1 25.4 @5 ; threshold 0.100
+Best acc (11.322).
+Train, epoch: 28; Loss: 5.10 | Acc: 11.6 ; threshold 0.100
+Test, epoch: 28; Loss: 5.19 | Acc: 11.1 @1 24.7 @5 ; threshold 0.100
+Train, epoch: 29; Loss: 5.09 | Acc: 11.7 ; threshold 0.100
+Test, epoch: 29; Loss: 5.17 | Acc: 11.2 @1 25.1 @5 ; threshold 0.100
+Train, epoch: 30; Loss: 5.08 | Acc: 11.8 ; threshold 0.100
+Test, epoch: 30; Loss: 5.17 | Acc: 11.2 @1 25.1 @5 ; threshold 0.100
+Train, epoch: 31; Loss: 5.08 | Acc: 11.9 ; threshold 0.100
+Test, epoch: 31; Loss: 5.17 | Acc: 11.2 @1 25.1 @5 ; threshold 0.100
+Train, epoch: 32; Loss: 5.07 | Acc: 11.9 ; threshold 0.100
+Test, epoch: 32; Loss: 5.17 | Acc: 11.2 @1 25.0 @5 ; threshold 0.100
+Train, epoch: 33; Loss: 5.06 | Acc: 12.0 ; threshold 0.100
+Test, epoch: 33; Loss: 5.15 | Acc: 11.4 @1 25.3 @5 ; threshold 0.100
+Best acc (11.358).
+Train, epoch: 34; Loss: 5.06 | Acc: 12.1 ; threshold 0.100
+Test, epoch: 34; Loss: 5.15 | Acc: 11.4 @1 25.6 @5 ; threshold 0.100
+Best acc (11.37).
+Train, epoch: 35; Loss: 5.05 | Acc: 12.2 ; threshold 0.100
+Test, epoch: 35; Loss: 5.19 | Acc: 11.2 @1 25.0 @5 ; threshold 0.100
+Train, epoch: 36; Loss: 5.04 | Acc: 12.2 ; threshold 0.100
+Test, epoch: 36; Loss: 5.17 | Acc: 11.3 @1 25.3 @5 ; threshold 0.100
+Train, epoch: 37; Loss: 5.04 | Acc: 12.3 ; threshold 0.100
+Test, epoch: 37; Loss: 5.14 | Acc: 11.6 @1 25.7 @5 ; threshold 0.100
+Best acc (11.564).
+Train, epoch: 38; Loss: 5.03 | Acc: 12.4 ; threshold 0.100
+Test, epoch: 38; Loss: 5.14 | Acc: 11.5 @1 25.7 @5 ; threshold 0.100
+Train, epoch: 39; Loss: 5.03 | Acc: 12.4 ; threshold 0.100
+Test, epoch: 39; Loss: 5.15 | Acc: 11.5 @1 25.5 @5 ; threshold 0.100
+Train, epoch: 40; Loss: 5.02 | Acc: 12.5 ; threshold 0.100
+Test, epoch: 40; Loss: 5.13 | Acc: 11.8 @1 26.0 @5 ; threshold 0.100
+Best acc (11.772).
+Train, epoch: 41; Loss: 5.02 | Acc: 12.6 ; threshold 0.100
+Test, epoch: 41; Loss: 5.12 | Acc: 11.7 @1 26.0 @5 ; threshold 0.100
+Train, epoch: 42; Loss: 5.01 | Acc: 12.6 ; threshold 0.100
+Test, epoch: 42; Loss: 5.13 | Acc: 11.7 @1 26.1 @5 ; threshold 0.100
+Train, epoch: 43; Loss: 5.01 | Acc: 12.6 ; threshold 0.100
+Test, epoch: 43; Loss: 5.12 | Acc: 11.7 @1 26.0 @5 ; threshold 0.100
+Train, epoch: 44; Loss: 5.00 | Acc: 12.7 ; threshold 0.100
+Test, epoch: 44; Loss: 5.12 | Acc: 11.8 @1 26.2 @5 ; threshold 0.100
+Best acc (11.82).
+Train, epoch: 45; Loss: 5.00 | Acc: 12.8 ; threshold 0.100
+Test, epoch: 45; Loss: 5.11 | Acc: 11.7 @1 26.2 @5 ; threshold 0.100
+Train, epoch: 46; Loss: 4.99 | Acc: 12.8 ; threshold 0.100
+Test, epoch: 46; Loss: 5.12 | Acc: 11.7 @1 26.0 @5 ; threshold 0.100
+Train, epoch: 47; Loss: 4.99 | Acc: 12.9 ; threshold 0.100
+Test, epoch: 47; Loss: 5.12 | Acc: 11.9 @1 26.0 @5 ; threshold 0.100
+Best acc (11.896).
+Train, epoch: 48; Loss: 4.98 | Acc: 12.9 ; threshold 0.100
+Test, epoch: 48; Loss: 5.12 | Acc: 11.9 @1 26.2 @5 ; threshold 0.100
+Train, epoch: 49; Loss: 4.98 | Acc: 13.0 ; threshold 0.100
+Test, epoch: 49; Loss: 5.11 | Acc: 12.0 @1 26.3 @5 ; threshold 0.100
+Best acc (11.964).
+new lr:0.0003
+Train, epoch: 50; Loss: 4.82 | Acc: 14.8 ; threshold 0.100
+Test, epoch: 50; Loss: 4.99 | Acc: 13.4 @1 28.4 @5 ; threshold 0.100
+Best acc (13.36).
+Train, epoch: 51; Loss: 4.80 | Acc: 15.1 ; threshold 0.100
+Test, epoch: 51; Loss: 4.98 | Acc: 13.4 @1 28.5 @5 ; threshold 0.100
+Train, epoch: 52; Loss: 4.80 | Acc: 15.1 ; threshold 0.100
+Test, epoch: 52; Loss: 4.98 | Acc: 13.4 @1 28.6 @5 ; threshold 0.100
+Best acc (13.408).
+Train, epoch: 53; Loss: 4.79 | Acc: 15.2 ; threshold 0.100
+Test, epoch: 53; Loss: 4.98 | Acc: 13.4 @1 28.8 @5 ; threshold 0.100
+Best acc (13.42).
+Train, epoch: 54; Loss: 4.79 | Acc: 15.2 ; threshold 0.100
+Test, epoch: 54; Loss: 4.98 | Acc: 13.4 @1 28.6 @5 ; threshold 0.100
+Train, epoch: 55; Loss: 4.79 | Acc: 15.2 ; threshold 0.100
+Test, epoch: 55; Loss: 4.98 | Acc: 13.5 @1 28.7 @5 ; threshold 0.100
+Best acc (13.478).
+Train, epoch: 56; Loss: 4.79 | Acc: 15.3 ; threshold 0.100
+Test, epoch: 56; Loss: 4.98 | Acc: 13.5 @1 28.7 @5 ; threshold 0.100
+Best acc (13.524).
+Train, epoch: 57; Loss: 4.78 | Acc: 15.3 ; threshold 0.100
+Test, epoch: 57; Loss: 4.98 | Acc: 13.4 @1 28.7 @5 ; threshold 0.100
+Train, epoch: 58; Loss: 4.78 | Acc: 15.3 ; threshold 0.100
+Test, epoch: 58; Loss: 4.98 | Acc: 13.5 @1 28.8 @5 ; threshold 0.100
+Train, epoch: 59; Loss: 4.78 | Acc: 15.3 ; threshold 0.100
+Test, epoch: 59; Loss: 4.98 | Acc: 13.5 @1 28.6 @5 ; threshold 0.100
+Train, epoch: 60; Loss: 4.78 | Acc: 15.4 ; threshold 0.100
+Test, epoch: 60; Loss: 4.98 | Acc: 13.4 @1 28.8 @5 ; threshold 0.100
+Train, epoch: 61; Loss: 4.78 | Acc: 15.3 ; threshold 0.100
+Test, epoch: 61; Loss: 4.98 | Acc: 13.5 @1 28.8 @5 ; threshold 0.100
+Train, epoch: 62; Loss: 4.78 | Acc: 15.4 ; threshold 0.100
+Test, epoch: 62; Loss: 4.98 | Acc: 13.4 @1 28.7 @5 ; threshold 0.100
+Train, epoch: 63; Loss: 4.77 | Acc: 15.4 ; threshold 0.100
+Test, epoch: 63; Loss: 4.98 | Acc: 13.5 @1 28.9 @5 ; threshold 0.100
+Best acc (13.532).
+Train, epoch: 64; Loss: 4.77 | Acc: 15.4 ; threshold 0.100
+Test, epoch: 64; Loss: 4.97 | Acc: 13.6 @1 28.8 @5 ; threshold 0.100
+Best acc (13.574).
+Train, epoch: 65; Loss: 4.77 | Acc: 15.4 ; threshold 0.100
+Test, epoch: 65; Loss: 4.98 | Acc: 13.6 @1 28.7 @5 ; threshold 0.100
+Train, epoch: 66; Loss: 4.77 | Acc: 15.4 ; threshold 0.100
+Test, epoch: 66; Loss: 4.98 | Acc: 13.5 @1 28.8 @5 ; threshold 0.100
+Train, epoch: 67; Loss: 4.77 | Acc: 15.4 ; threshold 0.100
+Test, epoch: 67; Loss: 4.98 | Acc: 13.5 @1 28.8 @5 ; threshold 0.100
+Train, epoch: 68; Loss: 4.77 | Acc: 15.5 ; threshold 0.100
+Test, epoch: 68; Loss: 4.98 | Acc: 13.5 @1 28.7 @5 ; threshold 0.100
+Train, epoch: 69; Loss: 4.77 | Acc: 15.5 ; threshold 0.100
+Test, epoch: 69; Loss: 4.98 | Acc: 13.6 @1 28.8 @5 ; threshold 0.100
+Best acc (13.61).
+Train, epoch: 70; Loss: 4.77 | Acc: 15.5 ; threshold 0.100
+Test, epoch: 70; Loss: 4.98 | Acc: 13.6 @1 28.7 @5 ; threshold 0.100
+Best acc (13.636).
+Train, epoch: 71; Loss: 4.77 | Acc: 15.5 ; threshold 0.100
+Test, epoch: 71; Loss: 4.98 | Acc: 13.6 @1 28.7 @5 ; threshold 0.100
+Train, epoch: 72; Loss: 4.76 | Acc: 15.5 ; threshold 0.100
+Test, epoch: 72; Loss: 4.98 | Acc: 13.5 @1 28.7 @5 ; threshold 0.100
+Train, epoch: 73; Loss: 4.76 | Acc: 15.5 ; threshold 0.100
+Test, epoch: 73; Loss: 4.98 | Acc: 13.6 @1 28.9 @5 ; threshold 0.100
+Train, epoch: 74; Loss: 4.76 | Acc: 15.5 ; threshold 0.100
+Test, epoch: 74; Loss: 4.98 | Acc: 13.6 @1 28.7 @5 ; threshold 0.100
+new lr:3e-05
+Train, epoch: 75; Loss: 4.74 | Acc: 15.8 ; threshold 0.100
+Test, epoch: 75; Loss: 4.97 | Acc: 13.8 @1 28.9 @5 ; threshold 0.100
+Best acc (13.756).
+Train, epoch: 76; Loss: 4.74 | Acc: 15.9 ; threshold 0.100
+Test, epoch: 76; Loss: 4.97 | Acc: 13.7 @1 29.0 @5 ; threshold 0.100
+Train, epoch: 77; Loss: 4.74 | Acc: 15.8 ; threshold 0.100
+Test, epoch: 77; Loss: 4.96 | Acc: 13.7 @1 28.9 @5 ; threshold 0.100
+Train, epoch: 78; Loss: 4.74 | Acc: 15.8 ; threshold 0.100
+Test, epoch: 78; Loss: 4.97 | Acc: 13.8 @1 28.9 @5 ; threshold 0.100
+Best acc (13.794).
+Train, epoch: 79; Loss: 4.74 | Acc: 15.8 ; threshold 0.100
+Test, epoch: 79; Loss: 4.96 | Acc: 13.8 @1 29.0 @5 ; threshold 0.100
+Best test acc. 13.794  at epoch 78/79
+Done in 90.7 hours with 1 GPU

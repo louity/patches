@@ -1,0 +1,169 @@
+kneighbors.py
+Arguments : Namespace(batch_norm=True, batchsize=256, batchsize_net=0, bottleneck_dim=256, bottleneck_spatialsize=1, convolutional_classifier=12, dataset='imagenet64', dropout=0.0, feat_square=False, finalsize_avg_pooling=0, kneighbors_fraction=0.4, lr_schedule='{0:3e-3,40:3e-4,50:3e-5}', multigpu=False, n_channel_convolution=2048, nepochs=60, no_affine_batch_norm=False, no_cudnn=False, no_jit=False, no_padding=False, normalize_net_outputs=False, num_workers=4, numpy_seed=0, optimizer='SGD', padding_mode='reflect', patches_file='', path_test='/mnt/home/fguth/datasets/imagenet64/out_data_val', path_train='/mnt/home/fguth/datasets/imagenet64/out_data_train', relu_after_bottleneck=False, resume='', save_best_model=False, save_model=False, sgd_momentum=0.9, spatialsize_avg_pooling=5, spatialsize_convolution=6, stride_avg_pooling=3, stride_convolution=1, torch_seed=0, weight_decay=0.0, whitening_reg=0.001)
+device: cuda
+Trainset : (1281159, 64, 64, 3)
+patches randomly selected: (2048, 3, 6, 6)
+kernel convolution shape: torch.Size([2048, 3, 6, 6])
+bias convolution shape: torch.Size([1, 2048, 1, 1])
+Net output size: out1 torch.Size([2048, 19, 19]) out2 torch.Size([2048, 19, 19])
+Parameters shape [torch.Size([2048]), torch.Size([2048]), torch.Size([2048]), torch.Size([2048]), torch.Size([1000, 256, 12, 12]), torch.Size([1000]), torch.Size([256, 2048, 1, 1]), torch.Size([256]), torch.Size([256, 2048, 1, 1]), torch.Size([256])]
+N parameters : 37.92228 millions
+optimizing net execution with torch.jit
+new lr:0.003
+Train, epoch: 0; Loss: 4.94 | Acc: 13.4 ; kneighbors_fraction 0.400
+Test, epoch: 0; Loss: 4.49 | Acc: 18.5 @1 36.7 @5 ; kneighbors_fraction 0.400
+Best acc (18.508).
+Train, epoch: 1; Loss: 4.42 | Acc: 19.4 ; kneighbors_fraction 0.400
+Test, epoch: 1; Loss: 4.28 | Acc: 21.0 @1 40.3 @5 ; kneighbors_fraction 0.400
+Best acc (20.986).
+Train, epoch: 2; Loss: 4.24 | Acc: 21.8 ; kneighbors_fraction 0.400
+Test, epoch: 2; Loss: 4.20 | Acc: 22.3 @1 41.9 @5 ; kneighbors_fraction 0.400
+Best acc (22.26).
+Train, epoch: 3; Loss: 4.13 | Acc: 23.3 ; kneighbors_fraction 0.400
+Test, epoch: 3; Loss: 4.13 | Acc: 23.3 @1 43.2 @5 ; kneighbors_fraction 0.400
+Best acc (23.342).
+Train, epoch: 4; Loss: 4.05 | Acc: 24.4 ; kneighbors_fraction 0.400
+Test, epoch: 4; Loss: 4.05 | Acc: 24.3 @1 44.8 @5 ; kneighbors_fraction 0.400
+Best acc (24.338).
+Train, epoch: 5; Loss: 3.98 | Acc: 25.4 ; kneighbors_fraction 0.400
+Test, epoch: 5; Loss: 4.06 | Acc: 24.8 @1 44.8 @5 ; kneighbors_fraction 0.400
+Best acc (24.8).
+Train, epoch: 6; Loss: 3.92 | Acc: 26.1 ; kneighbors_fraction 0.400
+Test, epoch: 6; Loss: 3.99 | Acc: 25.6 @1 45.8 @5 ; kneighbors_fraction 0.400
+Best acc (25.614).
+Train, epoch: 7; Loss: 3.87 | Acc: 26.8 ; kneighbors_fraction 0.400
+Test, epoch: 7; Loss: 4.01 | Acc: 25.3 @1 45.9 @5 ; kneighbors_fraction 0.400
+Train, epoch: 8; Loss: 3.83 | Acc: 27.4 ; kneighbors_fraction 0.400
+Test, epoch: 8; Loss: 3.96 | Acc: 26.4 @1 46.6 @5 ; kneighbors_fraction 0.400
+Best acc (26.396).
+Train, epoch: 9; Loss: 3.79 | Acc: 28.0 ; kneighbors_fraction 0.400
+Test, epoch: 9; Loss: 3.94 | Acc: 26.5 @1 46.9 @5 ; kneighbors_fraction 0.400
+Best acc (26.456).
+Train, epoch: 10; Loss: 3.75 | Acc: 28.6 ; kneighbors_fraction 0.400
+Test, epoch: 10; Loss: 3.92 | Acc: 26.7 @1 47.6 @5 ; kneighbors_fraction 0.400
+Best acc (26.724).
+Train, epoch: 11; Loss: 3.72 | Acc: 29.0 ; kneighbors_fraction 0.400
+Test, epoch: 11; Loss: 3.92 | Acc: 27.1 @1 47.6 @5 ; kneighbors_fraction 0.400
+Best acc (27.138).
+Train, epoch: 12; Loss: 3.68 | Acc: 29.5 ; kneighbors_fraction 0.400
+Test, epoch: 12; Loss: 3.89 | Acc: 27.4 @1 48.1 @5 ; kneighbors_fraction 0.400
+Best acc (27.372).
+Train, epoch: 13; Loss: 3.66 | Acc: 29.9 ; kneighbors_fraction 0.400
+Test, epoch: 13; Loss: 3.88 | Acc: 27.7 @1 48.4 @5 ; kneighbors_fraction 0.400
+Best acc (27.68).
+Train, epoch: 14; Loss: 3.63 | Acc: 30.2 ; kneighbors_fraction 0.400
+Test, epoch: 14; Loss: 3.86 | Acc: 27.9 @1 48.6 @5 ; kneighbors_fraction 0.400
+Best acc (27.918).
+Train, epoch: 15; Loss: 3.60 | Acc: 30.6 ; kneighbors_fraction 0.400
+Test, epoch: 15; Loss: 3.89 | Acc: 27.8 @1 48.5 @5 ; kneighbors_fraction 0.400
+Train, epoch: 16; Loss: 3.57 | Acc: 31.0 ; kneighbors_fraction 0.400
+Test, epoch: 16; Loss: 3.85 | Acc: 28.1 @1 48.8 @5 ; kneighbors_fraction 0.400
+Best acc (28.078).
+Train, epoch: 17; Loss: 3.55 | Acc: 31.3 ; kneighbors_fraction 0.400
+Test, epoch: 17; Loss: 3.83 | Acc: 28.4 @1 49.0 @5 ; kneighbors_fraction 0.400
+Best acc (28.378).
+Train, epoch: 18; Loss: 3.53 | Acc: 31.6 ; kneighbors_fraction 0.400
+Test, epoch: 18; Loss: 3.84 | Acc: 28.4 @1 49.1 @5 ; kneighbors_fraction 0.400
+Train, epoch: 19; Loss: 3.50 | Acc: 32.0 ; kneighbors_fraction 0.400
+Test, epoch: 19; Loss: 3.82 | Acc: 28.6 @1 49.5 @5 ; kneighbors_fraction 0.400
+Best acc (28.626).
+Train, epoch: 20; Loss: 3.48 | Acc: 32.2 ; kneighbors_fraction 0.400
+Test, epoch: 20; Loss: 3.79 | Acc: 29.1 @1 49.9 @5 ; kneighbors_fraction 0.400
+Best acc (29.05).
+Train, epoch: 21; Loss: 3.46 | Acc: 32.5 ; kneighbors_fraction 0.400
+Test, epoch: 21; Loss: 3.81 | Acc: 28.9 @1 49.5 @5 ; kneighbors_fraction 0.400
+Train, epoch: 22; Loss: 3.45 | Acc: 32.8 ; kneighbors_fraction 0.400
+Test, epoch: 22; Loss: 3.78 | Acc: 29.4 @1 50.1 @5 ; kneighbors_fraction 0.400
+Best acc (29.442).
+Train, epoch: 23; Loss: 3.43 | Acc: 33.0 ; kneighbors_fraction 0.400
+Test, epoch: 23; Loss: 3.80 | Acc: 29.0 @1 50.0 @5 ; kneighbors_fraction 0.400
+Train, epoch: 24; Loss: 3.41 | Acc: 33.3 ; kneighbors_fraction 0.400
+Test, epoch: 24; Loss: 3.78 | Acc: 29.4 @1 50.3 @5 ; kneighbors_fraction 0.400
+Train, epoch: 25; Loss: 3.39 | Acc: 33.5 ; kneighbors_fraction 0.400
+Test, epoch: 25; Loss: 3.77 | Acc: 29.6 @1 50.2 @5 ; kneighbors_fraction 0.400
+Best acc (29.636).
+Train, epoch: 26; Loss: 3.38 | Acc: 33.8 ; kneighbors_fraction 0.400
+Test, epoch: 26; Loss: 3.79 | Acc: 29.4 @1 50.0 @5 ; kneighbors_fraction 0.400
+Train, epoch: 27; Loss: 3.36 | Acc: 34.0 ; kneighbors_fraction 0.400
+Test, epoch: 27; Loss: 3.76 | Acc: 29.7 @1 50.4 @5 ; kneighbors_fraction 0.400
+Best acc (29.68).
+Train, epoch: 28; Loss: 3.35 | Acc: 34.2 ; kneighbors_fraction 0.400
+Test, epoch: 28; Loss: 3.78 | Acc: 29.5 @1 50.2 @5 ; kneighbors_fraction 0.400
+Train, epoch: 29; Loss: 3.33 | Acc: 34.5 ; kneighbors_fraction 0.400
+Test, epoch: 29; Loss: 3.75 | Acc: 29.6 @1 50.8 @5 ; kneighbors_fraction 0.400
+Train, epoch: 30; Loss: 3.32 | Acc: 34.6 ; kneighbors_fraction 0.400
+Test, epoch: 30; Loss: 3.75 | Acc: 29.8 @1 50.7 @5 ; kneighbors_fraction 0.400
+Best acc (29.762).
+Train, epoch: 31; Loss: 3.30 | Acc: 34.8 ; kneighbors_fraction 0.400
+Test, epoch: 31; Loss: 3.75 | Acc: 29.8 @1 50.8 @5 ; kneighbors_fraction 0.400
+Best acc (29.766).
+Train, epoch: 32; Loss: 3.29 | Acc: 35.0 ; kneighbors_fraction 0.400
+Test, epoch: 32; Loss: 3.73 | Acc: 30.3 @1 51.2 @5 ; kneighbors_fraction 0.400
+Best acc (30.342).
+Train, epoch: 33; Loss: 3.28 | Acc: 35.2 ; kneighbors_fraction 0.400
+Test, epoch: 33; Loss: 3.73 | Acc: 30.1 @1 51.2 @5 ; kneighbors_fraction 0.400
+Train, epoch: 34; Loss: 3.27 | Acc: 35.3 ; kneighbors_fraction 0.400
+Test, epoch: 34; Loss: 3.74 | Acc: 29.9 @1 51.0 @5 ; kneighbors_fraction 0.400
+Train, epoch: 35; Loss: 3.26 | Acc: 35.5 ; kneighbors_fraction 0.400
+Test, epoch: 35; Loss: 3.71 | Acc: 30.3 @1 51.2 @5 ; kneighbors_fraction 0.400
+Train, epoch: 36; Loss: 3.24 | Acc: 35.6 ; kneighbors_fraction 0.400
+Test, epoch: 36; Loss: 3.74 | Acc: 30.0 @1 50.9 @5 ; kneighbors_fraction 0.400
+Train, epoch: 37; Loss: 3.24 | Acc: 35.8 ; kneighbors_fraction 0.400
+Test, epoch: 37; Loss: 3.72 | Acc: 30.4 @1 51.3 @5 ; kneighbors_fraction 0.400
+Best acc (30.394).
+Train, epoch: 38; Loss: 3.23 | Acc: 36.0 ; kneighbors_fraction 0.400
+Test, epoch: 38; Loss: 3.76 | Acc: 29.8 @1 51.0 @5 ; kneighbors_fraction 0.400
+Train, epoch: 39; Loss: 3.22 | Acc: 36.1 ; kneighbors_fraction 0.400
+Test, epoch: 39; Loss: 3.72 | Acc: 30.4 @1 51.2 @5 ; kneighbors_fraction 0.400
+Best acc (30.424).
+new lr:0.0003
+Train, epoch: 40; Loss: 2.94 | Acc: 40.8 ; kneighbors_fraction 0.400
+Test, epoch: 40; Loss: 3.52 | Acc: 33.0 @1 54.1 @5 ; kneighbors_fraction 0.400
+Best acc (33.026).
+Train, epoch: 41; Loss: 2.91 | Acc: 41.3 ; kneighbors_fraction 0.400
+Test, epoch: 41; Loss: 3.51 | Acc: 32.9 @1 54.3 @5 ; kneighbors_fraction 0.400
+Train, epoch: 42; Loss: 2.90 | Acc: 41.5 ; kneighbors_fraction 0.400
+Test, epoch: 42; Loss: 3.51 | Acc: 33.2 @1 54.3 @5 ; kneighbors_fraction 0.400
+Best acc (33.24).
+Train, epoch: 43; Loss: 2.89 | Acc: 41.6 ; kneighbors_fraction 0.400
+Test, epoch: 43; Loss: 3.52 | Acc: 33.2 @1 54.4 @5 ; kneighbors_fraction 0.400
+Train, epoch: 44; Loss: 2.89 | Acc: 41.7 ; kneighbors_fraction 0.400
+Test, epoch: 44; Loss: 3.51 | Acc: 33.2 @1 54.5 @5 ; kneighbors_fraction 0.400
+Train, epoch: 45; Loss: 2.88 | Acc: 41.8 ; kneighbors_fraction 0.400
+Test, epoch: 45; Loss: 3.51 | Acc: 33.2 @1 54.4 @5 ; kneighbors_fraction 0.400
+Train, epoch: 46; Loss: 2.87 | Acc: 41.9 ; kneighbors_fraction 0.400
+Test, epoch: 46; Loss: 3.52 | Acc: 33.3 @1 54.5 @5 ; kneighbors_fraction 0.400
+Best acc (33.284).
+Train, epoch: 47; Loss: 2.87 | Acc: 42.0 ; kneighbors_fraction 0.400
+Test, epoch: 47; Loss: 3.51 | Acc: 33.2 @1 54.5 @5 ; kneighbors_fraction 0.400
+Train, epoch: 48; Loss: 2.86 | Acc: 42.0 ; kneighbors_fraction 0.400
+Test, epoch: 48; Loss: 3.52 | Acc: 33.3 @1 54.5 @5 ; kneighbors_fraction 0.400
+Best acc (33.3).
+Train, epoch: 49; Loss: 2.86 | Acc: 42.0 ; kneighbors_fraction 0.400
+Test, epoch: 49; Loss: 3.51 | Acc: 33.2 @1 54.5 @5 ; kneighbors_fraction 0.400
+new lr:3e-05
+Train, epoch: 50; Loss: 2.83 | Acc: 42.7 ; kneighbors_fraction 0.400
+Test, epoch: 50; Loss: 3.50 | Acc: 33.4 @1 54.7 @5 ; kneighbors_fraction 0.400
+Best acc (33.37).
+Train, epoch: 51; Loss: 2.83 | Acc: 42.7 ; kneighbors_fraction 0.400
+Test, epoch: 51; Loss: 3.50 | Acc: 33.4 @1 54.7 @5 ; kneighbors_fraction 0.400
+Best acc (33.382).
+Train, epoch: 52; Loss: 2.83 | Acc: 42.7 ; kneighbors_fraction 0.400
+Test, epoch: 52; Loss: 3.50 | Acc: 33.4 @1 54.7 @5 ; kneighbors_fraction 0.400
+Best acc (33.438).
+Train, epoch: 53; Loss: 2.83 | Acc: 42.7 ; kneighbors_fraction 0.400
+Test, epoch: 53; Loss: 3.50 | Acc: 33.4 @1 54.7 @5 ; kneighbors_fraction 0.400
+Train, epoch: 54; Loss: 2.82 | Acc: 42.8 ; kneighbors_fraction 0.400
+Test, epoch: 54; Loss: 3.50 | Acc: 33.4 @1 54.7 @5 ; kneighbors_fraction 0.400
+Train, epoch: 55; Loss: 2.82 | Acc: 42.8 ; kneighbors_fraction 0.400
+Test, epoch: 55; Loss: 3.50 | Acc: 33.4 @1 54.7 @5 ; kneighbors_fraction 0.400
+Train, epoch: 56; Loss: 2.82 | Acc: 42.7 ; kneighbors_fraction 0.400
+Test, epoch: 56; Loss: 3.50 | Acc: 33.4 @1 54.7 @5 ; kneighbors_fraction 0.400
+Train, epoch: 57; Loss: 2.82 | Acc: 42.7 ; kneighbors_fraction 0.400
+Test, epoch: 57; Loss: 3.50 | Acc: 33.4 @1 54.7 @5 ; kneighbors_fraction 0.400
+Train, epoch: 58; Loss: 2.82 | Acc: 42.8 ; kneighbors_fraction 0.400
+Test, epoch: 58; Loss: 3.50 | Acc: 33.4 @1 54.7 @5 ; kneighbors_fraction 0.400
+Train, epoch: 59; Loss: 2.82 | Acc: 42.7 ; kneighbors_fraction 0.400
+Test, epoch: 59; Loss: 3.50 | Acc: 33.4 @1 54.6 @5 ; kneighbors_fraction 0.400
+Best test acc. 33.438 at epoch 52/59
+Done in 68.4 hours with 1 GPU
