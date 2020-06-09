@@ -194,8 +194,8 @@ def create_classifier_blocks(out1, out2, args, params, n_classes):
                 batch_norm = nn.BatchNorm2d(args.bottleneck_dim, affine=(not args.no_affine_batch_norm)).to(device).float()
                 params += list(batch_norm.parameters())
             params += list(classifier.parameters())
-            classifier1 = nn.Conv2d(out1.size(1), args.bottleneck_dim, args.bottleneck_spatialsize).to(device).float()
-            classifier2 = nn.Conv2d(out2.size(1), args.bottleneck_dim, args.bottleneck_spatialsize).to(device).float()
+            classifier1 = nn.Conv2d(out1.size(1), args.bottleneck_dim, args.bottleneck_spatialsize, stride=args.bottleneck_stride).to(device).float()
+            classifier2 = nn.Conv2d(out2.size(1), args.bottleneck_dim, args.bottleneck_spatialsize, stride=args.bottleneck_stride).to(device).float()
         else:
             classifier1 = nn.Conv2d(out1.size(1), n_classes, args.convolutional_classifier).to(device).float()
             classifier2 = nn.Conv2d(out2.size(1), n_classes, args.convolutional_classifier).to(device).float()

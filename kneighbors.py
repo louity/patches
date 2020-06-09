@@ -39,6 +39,7 @@ parser.add_argument('--spatialsize_avg_pooling', default=5, type=int)
 parser.add_argument('--kneighbors', default=0, type=int)
 parser.add_argument('--kneighbors_fraction', default=0.25, type=float)
 parser.add_argument('--finalsize_avg_pooling', default=0, type=int)
+parser.add_argument('--sigmoid', default=0., type=float)
 
 
 # parameters of the classifier
@@ -48,6 +49,7 @@ parser.add_argument('--normalize_net_outputs', action='store_true', help='precom
 parser.add_argument('--bottleneck_dim', default=0, type=int, help='bottleneck dimension for the classifier')
 parser.add_argument('--convolutional_classifier', type=int, default=0, help='size of the convolution for convolutional classifier')
 parser.add_argument('--bottleneck_spatialsize', type=int, default=1, help='spatial size of the bottleneck')
+parser.add_argument('--bottleneck_stride', type=int, default=1, help='spatial size of the bottleneck')
 parser.add_argument('--relu_after_bottleneck', action='store_true', help='add relu after bottleneck ')
 parser.add_argument('--bn_after_bottleneck', action='store_true', help='add batch norm after bottleneck ')
 parser.add_argument('--dropout', type=float, default=0., help='dropout after relu')
@@ -176,6 +178,11 @@ def lowestk_heaviside(x, k):
         return (x < x.kthvalue(dim=1, k=k+1, keepdim=True).values).half()
     return (x < x.kthvalue(dim=1, k=k+1, keepdim=True).values).float()
 
+def lowestk_sigmoid(x, k, sigmoid):
+    if x.dtype == torch.float16:
+        return F.sigmoid((x.kthvalue(dim=1, k=k+1, keepdim=True).values - x)/sigmoid).half()
+    return F.sigmoid((x.kthvalue(dim=1, k=k+1, keepdim=True).values - x)/sigmoid).float()
+
 
 def compute_channel_mean_and_std(loader, net, n_channel_convolution,
         kernel_convolution, bias_convolution, n_epochs=1, seed=0):
@@ -241,7 +248,7 @@ def compute_channel_mean_and_std(loader, net, n_channel_convolution,
 
 
 class Net(nn.Module):
-    def __init__(self, kernel_convolution, bias_convolution, spatialsize_avg_pooling, stride_avg_pooling, finalsize_avg_pooling, k_neighbors=1):
+    def __init__(self, kernel_convolution, bias_convolution, spatialsize_avg_pooling, stride_avg_pooling, finalsize_avg_pooling, k_neighbors=1, sigmoid=0.):
         super(Net, self).__init__()
         self.kernel_convolution = nn.Parameter(kernel_convolution, requires_grad=False)
         self.bias_convolution = nn.Parameter(bias_convolution, requires_grad=False)
@@ -249,16 +256,23 @@ class Net(nn.Module):
         self.pool_stride = stride_avg_pooling
         self.finalsize_avg_pooling = finalsize_avg_pooling
         self.k_neighbors = k_neighbors
+        self.sigmoid = sigmoid
 
 
     def forward(self, x):
         out = F.conv2d(x, self.kernel_convolution)
 
-        out1 = lowestk_heaviside(-out + self.bias_convolution, self.k_neighbors)
+        if self.sigmoid > 0:
+            out1 = lowestk_sigmoid(-out + self.bias_convolution, self.k_neighbors, self.sigmoid)
+        else:
+            out1 = lowestk_heaviside(-out + self.bias_convolution, self.k_neighbors)
         out1 = F.avg_pool2d(out1, self.pool_size, stride=self.pool_stride, ceil_mode=True)
         if self.finalsize_avg_pooling > 0:
             out1 = F.adaptive_avg_pool2d(out1, self.finalsize_avg_pooling)
-        out2 = lowestk_heaviside(out + self.bias_convolution, self.k_neighbors)
+        if self.sigmoid > 0:
+            out2 = lowestk_sigmoid(out + self.bias_convolution, self.k_neighbors, self.sigmoid)
+        else:
+            out2 = lowestk_heaviside(out + self.bias_convolution, self.k_neighbors)
         out2 = F.avg_pool2d(out2, self.pool_size, stride=self.pool_stride, ceil_mode=True)
         if self.finalsize_avg_pooling > 0:
             out2 = F.adaptive_avg_pool2d(out2, self.finalsize_avg_pooling)
@@ -340,8 +354,9 @@ criterion = nn.CrossEntropyLoss()
 
 k_neighbors = args.kneighbors if args.kneighbors > 0 else int(n_channel_convolution * args.kneighbors_fraction)
 
-net = Net(kernel_convolution, bias_convolution, spatialsize_avg_pooling, stride_avg_pooling, finalsize_avg_pooling,
-          k_neighbors=k_neighbors).to(device)
+net = Net(kernel_convolution, bias_convolution, spatialsize_avg_pooling,
+          stride_avg_pooling, finalsize_avg_pooling,
+          k_neighbors=k_neighbors, sigmoid=args.sigmoid).to(device)
 
 x = torch.rand(1, 3, spatial_size, spatial_size).half().to(device)
 
@@ -602,4 +617,4 @@ print(f'Done in {hours:.1f} hours with {n_gpus} GPU')
 
 if args.summary_file:
     with open(args.summary_file, "a+") as f:
-        f.write(f'args: {args}, final_train_acc: {train_acc}, final_test_acc: {test_acc}, best_test_acc: {best_test_acc}')
+        f.write(f'args: {args}, final_train_acc: {train_acc}, final_test_acc: {test_acc}, best_test_acc: {best_test_acc}\n')
