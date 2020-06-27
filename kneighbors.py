@@ -358,7 +358,9 @@ net = Net(kernel_convolution, bias_convolution, spatialsize_avg_pooling,
           stride_avg_pooling, finalsize_avg_pooling,
           k_neighbors=k_neighbors, sigmoid=args.sigmoid).to(device)
 
-x = torch.rand(1, 3, spatial_size, spatial_size).half().to(device)
+x = torch.rand(1, 3, spatial_size, spatial_size).to(device)
+if torch.cuda.is_available():
+    x = x.half()
 
 
 out1, out2 = net(x)# , kernel_convolution, bias_convolution)
@@ -382,9 +384,11 @@ del x, out1, out2
 if torch.cuda.is_available() and not args.no_jit:
     print('optimizing net execution with torch.jit')
     if args.batchsize_net > 0:
-        trial = torch.rand(args.batchsize_net//n_gpus, 3, spatial_size, spatial_size).half().to(device)
+        trial = torch.rand(args.batchsize_net//n_gpus, 3, spatial_size, spatial_size).to(device)
     else:
-        trial = torch.rand(args.batchsize//n_gpus, 3, spatial_size, spatial_size).half().to(device)
+        trial = torch.rand(args.batchsize//n_gpus, 3, spatial_size, spatial_size).to(device)
+    if torch.cuda.is_available():
+        trial = trial.half()
 
     inputs = {'forward': (trial)}
     with torch.jit.optimized_execution(True):
