@@ -180,8 +180,8 @@ def lowestk_heaviside(x, k):
 
 def lowestk_sigmoid(x, k, sigmoid):
     if x.dtype == torch.float16:
-        return F.sigmoid((x.kthvalue(dim=1, k=k+1, keepdim=True).values - x)/sigmoid).half()
-    return F.sigmoid((x.kthvalue(dim=1, k=k+1, keepdim=True).values - x)/sigmoid).float()
+        return torch.sigmoid((x.kthvalue(dim=1, k=k+1, keepdim=True).values - x)/sigmoid).half()
+    return torch.sigmoid((x.kthvalue(dim=1, k=k+1, keepdim=True).values - x)/sigmoid).float()
 
 
 def compute_channel_mean_and_std(loader, net, n_channel_convolution,
