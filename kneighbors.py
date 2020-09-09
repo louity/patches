@@ -6,6 +6,7 @@ import numpy as np
 import os
 import time
 
+from dppy.finite_dpps import FiniteDPP
 from torchvision.datasets import CIFAR10
 import torchvision.transforms as transforms
 
@@ -32,6 +33,14 @@ parser.add_argument('--padding_mode', default='constant', choices=['constant', '
 parser.add_argument('--whitening_reg', default=0.001, type=float, help='regularization bias for zca whitening, negative values means no whitening')
 parser.add_argument('--gaussian_patches', action='store_true', help='patches sampled for gaussian RV')
 
+# parameters for the second layer of patches
+parser.add_argument('--n_channel_convolution_2', default=0, type=int)
+parser.add_argument('--spatialsize_convolution_2', default=0, type=int)
+parser.add_argument('--whitening_reg_2', default=1e-3, type=float, help='regularization bias for second zca whitening, negative values means no whitening')
+parser.add_argument('--kneighbors_2', default=0, type=int)
+parser.add_argument('--kneighbors_fraction_2', default=0.25, type=float)
+parser.add_argument('--sigmoid_2', default=0., type=float)
+
 # parameters for the extraction
 parser.add_argument('--stride_convolution', default=1, type=int)
 parser.add_argument('--stride_avg_pooling', default=2, type=int)
@@ -40,6 +49,7 @@ parser.add_argument('--kneighbors', default=0, type=int)
 parser.add_argument('--kneighbors_fraction', default=0.25, type=float)
 parser.add_argument('--finalsize_avg_pooling', default=0, type=int)
 parser.add_argument('--sigmoid', default=0., type=float)
+parser.add_argument('--dpp_subsample', action='store_true', help='subsample patches with DPP')
 
 
 # parameters of the classifier
@@ -314,20 +324,54 @@ else:
     whitening_op = np.eye(whitening_eigvals.size, dtype='float32')
 
 t = trainset.data
+n_images_trainset = t.shape[0]
 print(f'Trainset : {t.shape}')
 
-patches = utils.select_patches_randomly(t, patch_size=spatialsize_convolution, n_patches=n_channel_convolution, seed=args.numpy_seed)
+n_patches = 16*n_channel_convolution if args.dpp_subsample else n_channel_convolution
+# patches = utils.select_patches_randomly(t, patch_size=spatialsize_convolution, n_patches=n_patches, seed=args.numpy_seed)
+# patches = patches.astype('float64')
+# patches /= 255.0
+
+# selecting patches with dataloader
+if args.dataset == 'cifar10':
+    trainset_select_patches = CIFAR10(root='./data', train=True, download=True, transform=transforms.ToTensor())
+    trainloader_select_patches = torch.utils.data.DataLoader(trainset_select_patches, batch_size=args.batchsize, shuffle=False, num_workers=args.num_workers)
+elif args.dataset in ['imagenet32', 'imagenet64', 'imagenet128']:
+    trainset_select_patches = Imagenet32(args.path_train, transform=transforms.ToTensor(), sz=spatial_size, n_arrays=n_arrays_train)
+    trainloader_select_patches = torch.utils.data.DataLoader(
+        trainset_select_patches, batch_size=args.batchsize, shuffle=False,
+        num_workers=args.num_workers, pin_memory=True)
+n_patches_per_rowcol = spatial_size - spatialsize_convolution + 1
+patches = utils.select_patches_from_loader(trainloader_select_patches, args.batchsize, spatialsize_convolution, n_channel_convolution, n_images_trainset, n_patches_per_rowcol, func=None, seed=args.numpy_seed, stride=1).numpy().astype('float64')
 print(f'patches randomly selected: {patches.shape}')
 
-patches = patches.astype('float64')
-patches /= 255.0
 orig_shape = patches.shape
 patches = patches.reshape(patches.shape[0], -1)
-WTW_patches = (patches).dot(whitening_op).dot(whitening_op.T)
+W_patches = patches.dot(whitening_op)
+
+W_patches_norm_square = np.linalg.norm((patches).dot(whitening_op), axis=1)**2
+
+if args.dpp_subsample:
+    print(f'Sampling patches with DPP...')
+    orig_shape = (args.n_channel_convolution,) + orig_shape[1:]
+    DPP = FiniteDPP('likelihood', **{'L_eval_X_data': (utils.eval_L_rbf, W_patches)})
+    for i in range(10):
+        DPP.sample_exact('vfx', verbose=True, rls_oversample_dppvfx=16.0)
+        if len(DPP.list_of_samples[i]) >= args.n_channel_convolution:
+            indices = DPP.list_of_samples[i][:args.n_channel_convolution]
+            W_patches = W_patches[indices]
+            W_patches_norm_square = W_patches_norm_square[indices]
+            print('...done')
+            break
+        else:
+            if i == 9:
+                print(f'Got {len(DPP.list_of_samples[i])}  < {args.n_channel_convolution}, after 10 tries, exiting...')
+                exit()
+            print(f'Got {len(DPP.list_of_samples[i])}  < {args.n_channel_convolution}, resampling DPP...')
+WTW_patches = W_patches.dot(whitening_op.T)
 kernel_convolution = torch.from_numpy(WTW_patches.astype('float32')).view(orig_shape)
 print(f'kernel convolution shape: {kernel_convolution.shape}')
 
-W_patches_norm_square = np.linalg.norm((patches).dot(whitening_op), axis=1)**2
 bias_convolution = torch.from_numpy(0.5 * W_patches_norm_square.astype('float32')).view(1, -1, 1, 1)
 print(f'bias convolution shape: {bias_convolution.shape}')
 
@@ -358,15 +402,53 @@ net = Net(kernel_convolution, bias_convolution, spatialsize_avg_pooling,
           stride_avg_pooling, finalsize_avg_pooling,
           k_neighbors=k_neighbors, sigmoid=args.sigmoid).to(device)
 
+
 x = torch.rand(1, 3, spatial_size, spatial_size).to(device)
 if torch.cuda.is_available():
     x = x.half()
-
 
 out1, out2 = net(x)# , kernel_convolution, bias_convolution)
 if args.feat_square:
     out1 = torch.cat([out1, out1**2], dim=1)
     out2 = torch.cat([out2, out1**2], dim=1)
+
+net_2 = None
+if args.spatialsize_convolution_2 > 0:
+    def func(x):
+        if torch.cuda.is_available():
+            x = x.half().cuda()
+        return torch.cat(net(x), dim=1).float()
+    n_patches_per_rowcol_2 = out1.size(2) - spatialsize_convolution + 1
+    patches_2 = utils.select_patches_from_loader(trainloader_select_patches, args.batchsize, args.spatialsize_convolution_2, args.n_channel_convolution_2, n_images_trainset, n_patches_per_rowcol_2, func=func, seed=args.numpy_seed, stride=1).numpy().astype('float64')
+    print(f'patches 2 shape {patches_2.shape}')
+    patches_mean_2, whitening_eigvecs_2, whitening_eigvals_2  = utils.compute_whitening_from_loader(trainloader_select_patches, patch_size=args.spatialsize_convolution_2, stride=1, func=func)
+    print(f'Whitening 2 : mean {patches_mean_2.shape} eigvecs {whitening_eigvecs_2.shape}, eigvals max {whitening_eigvals_2.max()}, min {whitening_eigvals_2.min()} mean {whitening_eigvals_2.mean()}')
+
+    orig_shape_2 = patches_2.shape
+    patches_2 = patches_2.reshape(patches_2.shape[0], -1)
+    print(f'patches 2 shape {patches_2.shape}')
+    if args.whitening_reg_2 >= 0:
+        inv_sqrt_eigvals_2 = np.diag(1. / np.sqrt(whitening_eigvals_2 + args.whitening_reg_2))
+        whitening_op_2 = whitening_eigvecs_2.dot(inv_sqrt_eigvals_2).astype('float32')
+    else:
+        whitening_op_2 = np.eye(whitening_eigvals_2.size, dtype='float32')
+    W_patches_2 = patches_2.dot(whitening_op_2)
+
+    W_patches_2_norm_square = np.linalg.norm((patches_2).dot(whitening_op_2), axis=1)**2
+    WTW_patches_2 = W_patches_2.dot(whitening_op_2.T)
+    kernel_convolution_2 = torch.from_numpy(WTW_patches_2.astype('float32')).view(orig_shape_2)
+    print(f'kernel convolution 2 shape: {kernel_convolution_2.shape}')
+
+    bias_convolution_2 = torch.from_numpy(0.5 * W_patches_2_norm_square.astype('float32')).view(1, -1, 1, 1)
+    print(f'bias convolution 2 shape: {bias_convolution_2.shape}')
+    k_neighbors_2 = args.kneighbors_2 if args.kneighbors_2 > 0 else int(args.n_channel_convolution_2 * args.kneighbors_fraction_2)
+
+    net_2 = Net(kernel_convolution_2, bias_convolution_2, spatialsize_avg_pooling=1,
+            stride_avg_pooling=1, finalsize_avg_pooling=0,
+            k_neighbors=k_neighbors_2, sigmoid=args.sigmoid_2).to(device)
+
+    out1, out2 = net_2(torch.cat([out1, out2], dim=1).float())
+
 print(f'Net output size: out1 {out1.shape[-3:]} out2 {out2.shape[-3:]}')
 
 if args.resnet:
@@ -442,6 +524,9 @@ def train(epoch):
                 inputs = inputs.to(device)
                 outputs1, outputs2 = net(inputs)
 
+            if net_2 is not None:
+                outputs1, outputs2 = net_2(torch.cat([outputs1, outputs2], dim=1).float())
+
             if args.feat_square:
                 outputs1 = torch.cat([outputs1, outputs1**2], dim=1)
                 outputs2 = torch.cat([outputs2, outputs1**2], dim=1)
@@ -506,6 +591,9 @@ def test(epoch, loader=testloader, msg='Test'):
             else:
                 inputs = inputs.to(device)
                 outputs1, outputs2 = net(inputs)
+
+            if net_2 is not None:
+                outputs1, outputs2 = net_2(torch.cat([outputs1, outputs2], dim=1).float())
 
             if args.feat_square:
                 outputs1 = torch.cat([outputs1, outputs1**2], dim=1)

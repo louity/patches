@@ -12,6 +12,39 @@ else:
     device = 'cpu'
 
 
+def select_patches_from_loader(loader, batchsize, patch_size, n_patches, n_images, n_patches_per_rowcol, func=None, seed=0, stride=1):
+    np.random.seed(seed)
+    n_patches_per_image = n_patches_per_rowcol**2
+    n_patches_total = n_images * n_patches_per_image
+
+    patch_ids = np.random.choice(n_patches_total, size=n_patches, replace=True)
+    unique_patch_ids = np.unique(patch_ids)
+    while len(unique_patch_ids) < len(patch_ids):
+        unique_patch_ids = np.unique(np.concatenate([unique_patch_ids, np.random.choice(n_patches_total, size=n_patches, replace=True)]))
+    patch_ids = unique_patch_ids[:len(patch_ids)]
+
+
+    patch_img_batch_ids = (patch_ids % n_images) // batchsize
+
+    patches = []
+    for batch_idx, (inputs, _) in enumerate(loader):
+        if batch_idx not in patch_img_batch_ids:
+            continue
+
+        patch_ids_batch = patch_ids[np.argwhere(patch_img_batch_ids == batch_idx)]
+
+        if func is not None:
+            inputs = func(inputs)
+        inputs = inputs.cpu()
+
+        for patch_id in patch_ids_batch:
+            img_id = (patch_id % n_images) % batchsize
+            x_id = int(patch_id // n_images % n_patches_per_rowcol)
+            y_id = int(patch_id // (n_images * n_patches_per_rowcol))
+            patches.append(inputs[img_id, :, x_id:x_id+patch_size, y_id:y_id+patch_size])
+
+    return torch.cat(patches, dim=0)
+
 def select_patches_randomly(images, patch_size, n_patches=5000000, seed=0):
     np.random.seed(seed)
     images = images.transpose(0, 3, 1, 2)
@@ -52,7 +85,7 @@ def correct_topk(output, target, topk=(1,)):
     return res
 
 
-def compute_whitening_from_loader(loader, patch_size, seed=0, stride=1):
+def compute_whitening_from_loader(loader, patch_size, seed=0, stride=1, func=None):
     mean, covariance = None, None
 
     # compute the mean
@@ -60,6 +93,8 @@ def compute_whitening_from_loader(loader, patch_size, seed=0, stride=1):
     torch.manual_seed(seed)
     for batch_idx, (inputs, _) in enumerate(loader):
         inputs, _ = inputs.to(device), _.to(device)
+        if func is not None:
+            inputs = func(inputs)
         patches = F.unfold(inputs, patch_size, stride=stride).transpose(0, 1).contiguous()
         patches = patches.view(patches.size(0), -1)
         n = inputs.size(0)
@@ -76,6 +111,8 @@ def compute_whitening_from_loader(loader, patch_size, seed=0, stride=1):
     torch.manual_seed(seed)
     for batch_idx, (inputs, _) in enumerate(loader):
         inputs, _ = inputs.to(device), _.to(device)
+        if func is not None:
+            inputs = func(inputs)
         patches = F.unfold(inputs, patch_size, stride=stride).transpose(0, 1).contiguous()
         patches = patches.view(patches.size(0), -1) - mean
         n = inputs.size(0)
@@ -352,3 +389,13 @@ class ResNet(nn.Module):
         x = self.fc(x)
         return x
 
+def eval_L_rbf(X, Y=None, sig=5.):
+    X = np.atleast_2d(X)
+    X_norm_sq = np.linalg.norm(X, axis=1)**2
+    if Y is None:
+        pairwise_distance_sq = X_norm_sq[:, np.newaxis] - 2*X.dot(X.T) + X_norm_sq[np.newaxis,:]
+    else:
+        Y = np.atleast_2d(Y)
+        Y_norm_sq = np.linalg.norm(Y, axis=1)**2
+        pairwise_distance_sq = X_norm_sq[:, np.newaxis] - 2*X.dot(Y.T) + Y_norm_sq[np.newaxis,:]
+    return np.exp(-pairwise_distance_sq / sig**2)
