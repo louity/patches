@@ -6,8 +6,9 @@ import numpy as np
 import os
 import time
 
-from dppy.finite_dpps import FiniteDPP
+# from dppy.finite_dpps import FiniteDPP
 from torchvision.datasets import CIFAR10
+import torchvision.datasets as datasets
 import torchvision.transforms as transforms
 
 import torch
@@ -79,6 +80,7 @@ parser.add_argument('--weight_decay', type=float, default=0.)
 # hardware parameters
 parser.add_argument('--path_train', help="path to imagenet", default='/d1/dataset/imagenet32/out_data_train')
 parser.add_argument('--path_test', help="path to imagenet", default='/d1/dataset/imagenet32/out_data_val')
+parser.add_argument('--path', help="path to imagenet", default='/d1/dataset/2012')
 parser.add_argument('--num_workers', type=int, default=2)
 parser.add_argument('--multigpu', action='store_true')
 parser.add_argument('--no_cudnn', action='store_true', help='disable cuDNN to prevent cuDNN error (slower)')
@@ -176,6 +178,38 @@ elif args.dataset in ['imagenet32', 'imagenet64', 'imagenet128']:
     trainloader = torch.utils.data.DataLoader(
         trainset, batch_size=args.batchsize, shuffle=True,
         num_workers=args.num_workers, pin_memory=True)
+    testloader = torch.utils.data.DataLoader(
+        testset,
+        batch_size=args.batchsize, shuffle=False,
+        num_workers=args.num_workers, pin_memory=True)
+    n_classes = 1000
+
+# WIP
+elif args.dataset in ['imagenet']:
+    spatial_size = 64
+    traindir = os.path.join(args.path, 'train')
+    valdir = os.path.join(args.path, 'val')
+    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                     std=[0.229, 0.224, 0.225])
+
+
+    trainset = datasets.ImageFolder(
+        traindir,
+        transforms.Compose([
+            transforms.RandomResizedCrop(64),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            normalize,
+        ]))
+    trainloader = torch.utils.data.DataLoader(
+        trainset, batch_size=128, shuffle=True,
+        num_workers=8, pin_memory=True)
+    testset = datasets.ImageFolder(valdir, transforms.Compose([
+            transforms.Resize(64),
+            transforms.CenterCrop(64),
+            transforms.ToTensor(),
+            normalize,
+        ]))
     testloader = torch.utils.data.DataLoader(
         testset,
         batch_size=args.batchsize, shuffle=False,
@@ -303,6 +337,24 @@ if not os.path.exists(whitening_file):
         trainloader_whitening = torch.utils.data.DataLoader(
             trainset_whitening, batch_size=100, shuffle=False,
             num_workers=args.num_workers, pin_memory=True)
+    elif args.dataset in ['imagenet']:
+        stride = 2
+        spatial_size = 64
+        traindir = os.path.join(args.path, 'train')
+        valdir = os.path.join(args.path, 'val')
+        normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                        std=[0.229, 0.224, 0.225])
+
+        trainset_whitening = datasets.ImageFolder(
+            traindir,
+            transforms.Compose([
+            transforms.Resize(64),
+            transforms.CenterCrop(64),
+            transforms.ToTensor(),
+        ]))
+        trainloader_whitening = torch.utils.data.DataLoader(
+            trainset_whitening, batch_size=100, shuffle=False,
+            num_workers=args.num_workers, pin_memory=True)
     patches_mean, whitening_eigvecs, whitening_eigvals  = utils.compute_whitening_from_loader(trainloader_whitening, patch_size=spatialsize_convolution, stride=stride)
     del trainloader_whitening
     del trainset_whitening
@@ -323,14 +375,19 @@ if args.whitening_reg >= 0:
 else:
     whitening_op = np.eye(whitening_eigvals.size, dtype='float32')
 
-t = trainset.data
-n_images_trainset = t.shape[0]
-print(f'Trainset : {t.shape}')
+if hasattr(trainset, 'data'):
+    t = trainset.data
+    n_images_trainset = t.shape[0]
+    print(f'Trainset : {t.shape}')
+    patches = utils.select_patches_randomly(t, patch_size=spatialsize_convolution, n_patches=n_channel_convolution, seed=args.numpy_seed)
+    patches = patches.astype('float64')
+    patches /= 255.0
+    print(f'patches randomly selected: {patches.shape}, mean {patches.mean()} std {patches.std()}')
+else:
+    n_images_trainset = len(trainloader.dataset)
+    print(f'{n_images_trainset} train images')
 
-n_patches = 16*n_channel_convolution if args.dpp_subsample else n_channel_convolution
-# patches = utils.select_patches_randomly(t, patch_size=spatialsize_convolution, n_patches=n_patches, seed=args.numpy_seed)
-# patches = patches.astype('float64')
-# patches /= 255.0
+
 
 # selecting patches with dataloader
 if args.dataset == 'cifar10':
@@ -341,37 +398,31 @@ elif args.dataset in ['imagenet32', 'imagenet64', 'imagenet128']:
     trainloader_select_patches = torch.utils.data.DataLoader(
         trainset_select_patches, batch_size=args.batchsize, shuffle=False,
         num_workers=args.num_workers, pin_memory=True)
+elif args.dataset in ['imagenet']:
+    stride = 2
+    spatial_size = 64
+    traindir = os.path.join(args.path, 'train')
+    trainset_select_patches = datasets.ImageFolder(
+        traindir,
+        transforms.Compose([
+        transforms.Resize(64),
+        transforms.CenterCrop(64),
+        transforms.ToTensor(),
+    ]))
+    trainloader_select_patches = torch.utils.data.DataLoader(
+        trainset_select_patches, batch_size=args.batchsize, shuffle=False,
+        num_workers=args.num_workers, pin_memory=True)
 n_patches_per_rowcol = spatial_size - spatialsize_convolution + 1
 patches = utils.select_patches_from_loader(trainloader_select_patches, args.batchsize, spatialsize_convolution, n_channel_convolution, n_images_trainset, n_patches_per_rowcol, func=None, seed=args.numpy_seed, stride=1).numpy().astype('float64')
-print(f'patches randomly selected: {patches.shape}')
+print(f'patches randomly selected: {patches.shape}, mean {patches.mean()} std {patches.std()}')
 
 orig_shape = patches.shape
 patches = patches.reshape(patches.shape[0], -1)
-W_patches = patches.dot(whitening_op)
-
-W_patches_norm_square = np.linalg.norm((patches).dot(whitening_op), axis=1)**2
-
-if args.dpp_subsample:
-    print(f'Sampling patches with DPP...')
-    orig_shape = (args.n_channel_convolution,) + orig_shape[1:]
-    DPP = FiniteDPP('likelihood', **{'L_eval_X_data': (utils.eval_L_rbf, W_patches)})
-    for i in range(10):
-        DPP.sample_exact('vfx', verbose=True, rls_oversample_dppvfx=16.0)
-        if len(DPP.list_of_samples[i]) >= args.n_channel_convolution:
-            indices = DPP.list_of_samples[i][:args.n_channel_convolution]
-            W_patches = W_patches[indices]
-            W_patches_norm_square = W_patches_norm_square[indices]
-            print('...done')
-            break
-        else:
-            if i == 9:
-                print(f'Got {len(DPP.list_of_samples[i])}  < {args.n_channel_convolution}, after 10 tries, exiting...')
-                exit()
-            print(f'Got {len(DPP.list_of_samples[i])}  < {args.n_channel_convolution}, resampling DPP...')
-WTW_patches = W_patches.dot(whitening_op.T)
+WTW_patches = (patches).dot(whitening_op).dot(whitening_op.T)
 kernel_convolution = torch.from_numpy(WTW_patches.astype('float32')).view(orig_shape)
 print(f'kernel convolution shape: {kernel_convolution.shape}')
 
+W_patches_norm_square = np.linalg.norm((patches).dot(whitening_op), axis=1)**2
 bias_convolution = torch.from_numpy(0.5 * W_patches_norm_square.astype('float32')).view(1, -1, 1, 1)
 print(f'bias convolution shape: {bias_convolution.shape}')
 

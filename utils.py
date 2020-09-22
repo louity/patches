@@ -26,24 +26,26 @@ def select_patches_from_loader(loader, batchsize, patch_size, n_patches, n_image
 
     patch_img_batch_ids = (patch_ids % n_images) // batchsize
 
-    patches = []
+    selected_patches = torch.DoubleTensor(n_patches, 3, patch_size, patch_size).fill_(0)
+
     for batch_idx, (inputs, _) in enumerate(loader):
         if batch_idx not in patch_img_batch_ids:
             continue
 
-        patch_ids_batch = patch_ids[np.argwhere(patch_img_batch_ids == batch_idx)]
+        batch_patch_ids = np.argwhere(patch_img_batch_ids == batch_idx)
 
         if func is not None:
             inputs = func(inputs)
-        inputs = inputs.cpu()
+        inputs = inputs.cpu().double()
 
-        for patch_id in patch_ids_batch:
+        for batch_patch_id in batch_patch_ids:
+            patch_id  = patch_ids[batch_patch_id]
             img_id = (patch_id % n_images) % batchsize
             x_id = int(patch_id // n_images % n_patches_per_rowcol)
             y_id = int(patch_id // (n_images * n_patches_per_rowcol))
-            patches.append(inputs[img_id, :, x_id:x_id+patch_size, y_id:y_id+patch_size])
+            selected_patches[batch_patch_id] = inputs[img_id, :, x_id:x_id+patch_size, y_id:y_id+patch_size]
 
-    return torch.cat(patches, dim=0)
+    return selected_patches
 
 def select_patches_randomly(images, patch_size, n_patches=5000000, seed=0):
     np.random.seed(seed)
