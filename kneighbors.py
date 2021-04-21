@@ -128,7 +128,7 @@ train_sampler = None
 # Define the dataset
 if args.dataset == 'cifar10':
     spatial_size = 32
-    padding = 0 if args.no_padding else 8
+    padding = 0 if args.no_padding else 4
     transform_train = transforms.Compose([
         transforms.RandomCrop(spatial_size, padding=padding),
         transforms.RandomHorizontalFlip(),
