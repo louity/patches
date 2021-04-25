@@ -401,3 +401,29 @@ def eval_L_rbf(X, Y=None, sig=5.):
         Y_norm_sq = np.linalg.norm(Y, axis=1)**2
         pairwise_distance_sq = X_norm_sq[:, np.newaxis] - 2*X.dot(Y.T) + Y_norm_sq[np.newaxis,:]
     return np.exp(-pairwise_distance_sq / sig**2)
+
+def compute_features(loader, net, args, flip=False):
+    features, labels = [], []
+    with torch.no_grad():
+        for inputs, targets in loader:
+            if torch.cuda.is_available():
+                inputs = inputs.half()
+            if args.batchsize_net > 0:
+                outputs = []
+                for i in range(np.ceil(inputs.size(0)/args.batchsize_net).astype('int')):
+                    start, end = i*args.batchsize_net, min((i+1)*args.batchsize_net, inputs.size(0))
+                    inputs_batch = inputs[start:end].to(device)
+                    outputs.append(net(inputs_batch))
+                outputs1 = torch.cat([out[0] for out in outputs], dim=0)
+                outputs2 = torch.cat([out[1] for out in outputs], dim=0)
+            else:
+                inputs = inputs.to(device)
+                outputs1, outputs2 = net(inputs)
+            outputs1, outputs2 = outputs1.float(), outputs2.float()
+            feats = torch.cat([
+                    outputs1.reshape((outputs1.size(0), -1)), outputs2.reshape((outputs1.size(0), -1))
+                ], dim=1).cpu().numpy()
+            features.append(feats)
+            labels.append(targets.cpu().numpy())
+    return np.concatenate(features, axis=0), np.concatenate(labels, axis=0)
+
